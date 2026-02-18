@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply border-border;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Glass effect components */
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-xl;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:bg-white/20 hover:border-white/30 hover:shadow-lg;
+  }
+
+  .glass-input {
+    @apply bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50;
+  }
+
+  .gold-text {
+    @apply text-primary;
+  }
+
+  .red-text {
+    @apply text-secondary;
+  }
+
+  .gold-glow {
+    @apply shadow-lg shadow-primary/20;
+  }
+
+  .gradient-gold-red {
+    @apply bg-gradient-to-r from-primary to-secondary;
+  }
+}
+
+@layer base {
+  :root {
+    /* Dark Theme Colors */
+    --background: 0 0% 6%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    /* Gold accent primary */
+    --primary: 45 93% 52%;
+    --primary-foreground: 0 0% 10%;
+    /* Red accent secondary */
+    --secondary: 0 84% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 35%;
+    --muted-foreground: 0 0% 75%;
+    /* Gold for accent */
+    --accent: 45 93% 52%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 45 93% 52%;
+    --chart-1: 45 93% 52%;
+    --chart-2: 0 84% 50%;
+    --chart-3: 200 90% 50%;
+    --chart-4: 270 90% 50%;
+    --chart-5: 120 90% 45%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 45 93% 52%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 84% 50%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 45 93% 52%;
+  }
+  .dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 45 93% 52%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 0 84% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 35%;
+    --muted-foreground: 0 0% 75%;
+    --accent: 45 93% 52%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 45 93% 52%;
+    --chart-1: 45 93% 52%;
+    --chart-2: 0 84% 50%;
+    --chart-3: 200 90% 50%;
+    --chart-4: 270 90% 50%;
+    --chart-5: 120 90% 45%;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 45 93% 52%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 84% 50%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 45 93% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
