@@ -26,6 +26,22 @@ export const api = {
         return res.json();
     },
 
+    changePassword: async (token: string, data: any): Promise<any> => {
+        const res = await fetch(`${API_URL}/auth/change-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(errorText || 'Failed to change password');
+        }
+        return res.json();
+    },
+
     // Referrals
     getReferrals: async (token: string): Promise<any> => {
         const res = await fetch(`${API_URL}/referrals/`, {
@@ -55,6 +71,19 @@ export const api = {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ status }),
+        });
+        if (!res.ok) throw new Error('Failed to update referral');
+        return res.json();
+    },
+
+    updateReferral: async (token: string, id: string, data: any): Promise<any> => {
+        const res = await fetch(`${API_URL}/referrals/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data),
         });
         if (!res.ok) throw new Error('Failed to update referral');
         return res.json();
@@ -166,6 +195,24 @@ export const api = {
         return res.json();
     },
 
+    // Notifications
+    getNotifications: async (token: string): Promise<any> => {
+        const res = await fetch(`${API_URL}/notifications/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch notifications');
+        return res.json();
+    },
+
+    markNotificationRead: async (token: string, id: string): Promise<any> => {
+        const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to mark notification read');
+        return res.json();
+    },
+
     // Broadcast
     sendBroadcast: async (token: string, data: any): Promise<any> => {
         const res = await fetch(`${API_URL}/notifications/broadcast`, {
@@ -180,13 +227,78 @@ export const api = {
         return res.json();
     },
 
+    // Guests
+    getGuests: async (token: string): Promise<any> => {
+        const res = await fetch(`${API_URL}/guests/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch guests');
+        return res.json();
+    },
+
+    inviteGuest: async (token: string, data: any): Promise<any> => {
+        const res = await fetch(`${API_URL}/guests/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed to invite guest');
+        return res.json();
+    },
+
+    updateGuest: async (token: string, id: number, data: any): Promise<any> => {
+        const res = await fetch(`${API_URL}/guests/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed to update guest');
+        return res.json();
+    },
+
+    // Learning Credits
+    getLearningCredits: async (token: string): Promise<any> => {
+        const res = await fetch(`${API_URL}/learning/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch learning credits');
+        return res.json();
+    },
+
+    submitLearningCredit: async (token: string, data: any): Promise<any> => {
+        const res = await fetch(`${API_URL}/learning/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed to submit learning credit');
+        return res.json();
+    },
+
     // Dashboard Data (Parallel fetching for efficiency)
     getDashboardData: async (token: string): Promise<any> => {
+        const handleResponse = async (res: Response) => {
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`API Error: ${res.status} ${text}`);
+            }
+            return res.json();
+        };
+
         const [referrals, revenue, meetings, members] = await Promise.all([
-            fetch(`${API_URL}/referrals/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-            fetch(`${API_URL}/revenue/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-            fetch(`${API_URL}/meetings/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-            fetch(`${API_URL}/auth/users`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+            fetch(`${API_URL}/referrals/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(handleResponse),
+            fetch(`${API_URL}/revenue/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(handleResponse),
+            fetch(`${API_URL}/meetings/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(handleResponse),
+            fetch(`${API_URL}/auth/users`, { headers: { 'Authorization': `Bearer ${token}` } }).then(handleResponse),
         ]);
         return { referrals, revenue, meetings, members };
     }

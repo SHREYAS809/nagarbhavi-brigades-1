@@ -20,6 +20,8 @@ import {
   Video,
   Wallet,
   CheckCircle,
+  Bell,
+  CheckSquare,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -39,10 +41,12 @@ export function Sidebar() {
 
   const memberLinks = [
     { href: '/member', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/member/submit', label: 'Give Referral', icon: Send }, // Restored Submit Referral
-    { href: '/member/thank-you', label: 'Thank You Slip', icon: CheckCircle },
-    { href: '/member/referral', label: 'My Referrals', icon: Gift },
+    { href: '/member/submit', label: 'Give Referral', icon: Send },
+    { href: '/member/thank-you', label: 'Thank You Slip', icon: CheckCircle }, // TYFCB
+    { href: '/member/referral', label: 'Referrals Given', icon: Gift },
+    { href: '/member/referrals-received', label: 'Referrals Received', icon: CheckSquare },
     { href: '/member/meetings', label: 'Meetings', icon: Calendar },
+    { href: '/member/broadcast', label: 'Broadcasts', icon: Bell },
     { href: '/member/revenue', label: 'Revenue', icon: TrendingUp },
     { href: '/member/profile', label: 'Profile', icon: User },
   ];
@@ -69,7 +73,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-4 py-8 space-y-2">
+      <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
         {links.map((link) => {
           const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
           const Icon = link.icon;

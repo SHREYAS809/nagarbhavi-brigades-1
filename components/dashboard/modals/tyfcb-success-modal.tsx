@@ -9,10 +9,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Download, Printer, Check } from 'lucide-react';
-import jsPDF from 'jspdf'; // We will use a simple text approach first, then maybe jsPDF if installed.
-// For now, let's stick to the text blob approach used in other modals to avoid install issues, 
-// OR we can try to use a library if available. The prompt said "pdf should be generated".
-// I'll stick to the text generation for now as it's robust, but label it as "Download".
+// We will use a simple text approach first.
+// The text blob approach is robust and doesn't require extra dependencies for this MVP.
 
 interface TYFCBSuccessModalProps {
     open: boolean;
@@ -81,33 +79,38 @@ Thank you for contributing to the growth of our community!
                 </DialogHeader>
 
                 {/* Slip Display */}
-                <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-4 my-4">
-                    <div className="text-center border-b border-white/10 pb-4">
-                        <h3 className="font-bold text-lg gold-text">Nagarbhavi Brigades</h3>
-                        <p className="text-xs text-muted-foreground">Thank You For Closed Business</p>
+                {/* Slip Display */}
+                <div style={{ backgroundColor: 'white', color: 'black' }} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4 my-4 text-black shadow-lg">
+                    <div className="text-center border-b border-gray-200 pb-4">
+                        <h3 className="font-bold text-lg text-black">Nagarbhavi Brigades (v2)</h3>
+                        <p className="text-xs text-gray-500">Thank You For Closed Business</p>
                     </div>
 
                     <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">To:</span>
-                            <span className="font-semibold">{data.toMemberName}</span>
+                            <span className="text-gray-600">To:</span>
+                            <span className="font-semibold text-black">{data.toMemberName}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">From:</span>
-                            <span className="font-semibold">{data.fromMemberName}</span>
+                            <span className="text-gray-600">From:</span>
+                            <span className="font-semibold text-black">{data.fromMemberName}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Amount:</span>
-                            <span className="font-bold text-green-400">₹{data.amount}</span>
+                            <span className="text-gray-600">Amount:</span>
+                            <span className="font-bold text-green-600">₹{data.amount}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Type:</span>
-                            <span>{data.type}</span>
+                            <span className="text-gray-600">Type:</span>
+                            <span className="text-black font-medium">{data.type}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-600">Tier:</span>
+                            <span className="text-black font-medium">{data.tier}</span>
                         </div>
                     </div>
 
-                    <div className="pt-4 border-t border-white/10 text-center">
-                        <p className="text-xs italic text-muted-foreground">"Givers Gain"</p>
+                    <div className="pt-4 border-t border-gray-200 text-center">
+                        <p className="text-xs italic text-gray-500">"Givers Gain"</p>
                     </div>
                 </div>
 

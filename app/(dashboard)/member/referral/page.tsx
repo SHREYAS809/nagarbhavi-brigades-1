@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/authContext';
 import { api } from '@/lib/api';
 import { Gift } from 'lucide-react';
 import { RecordRevenueModal } from '@/components/dashboard/modals/record-revenue-modal';
+import { EditReferralModal } from '@/components/dashboard/modals/edit-referral-modal';
 
 export default function MyReferralsPage() {
   const { user } = useAuth();
@@ -12,7 +13,9 @@ export default function MyReferralsPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState<any>(null);
+  const [selectedReferralId, setSelectedReferralId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -34,6 +37,13 @@ export default function MyReferralsPage() {
     fetchData();
   }, [user]);
 
+  const fetchData = async () => {
+    if (user?.token) {
+      const refs = await api.getReferrals(user.token);
+      setReferrals(refs);
+    }
+  };
+
   const getMemberName = (id: string) => {
     const m = members.find((u: any) => u._id === id);
     return m ? m.name : 'Unknown';
@@ -41,24 +51,8 @@ export default function MyReferralsPage() {
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading referrals...</div>;
 
-  // Filter based on user (backend returning all? No, api.getReferrals returns all? 
-  // Wait, backend route `get_referrals` might return ALL if admin, or...
-  // Let's check backend route. Assuming it returns all, we filter here just in case, 
-  // OR backend filters. 
-  // User.get_referrals in backend returns all? 
-  // Actually let's assume getReferrals returns what the user is allowed to see.
-  // But for now, let's filter client side if needed, or just display.
-  // API route `GET /referrals` calls `Referral.get_all_referrals()`.
-  // Detailed check: backend/routes/referral_routes.py
-  // It calls `Referral.get_all_referrals()`.
-  // So it returns ALL referrals.
-  // So we MUST filter by user ID here for the "My Referrals" page.
-
-  const userReferrals = referrals.filter((r: any) =>
-    r.from_member === user?.id || r.to_member === user?.id
-  );
-
-
+  // Filter for Referrals Given only
+  const referralsGiven = referrals.filter((r: any) => r.from_member === user?.id);
 
   const handleRecordRevenue = (referral: any) => {
     setSelectedReferral(referral);
@@ -66,114 +60,281 @@ export default function MyReferralsPage() {
   };
 
   const handleRevenueSuccess = () => {
-    // Refresh data
-    if (user?.token) {
-      api.getReferrals(user.token).then(setReferrals);
+    fetchData();
+  };
+
+  const handleEditClick = () => {
+    if (!selectedReferralId) {
+      alert("Please select a referral slip to edit/delete.");
+      return;
+    }
+    const ref = referrals.find(r => r._id === selectedReferralId);
+    if (ref) {
+      setSelectedReferral(ref);
+      setIsEditModalOpen(true);
     }
   };
 
+  const handleEditSuccess = () => {
+    fetchData();
+    setSelectedReferralId(null);
+  };
+
+  const handleExport = (withHeaders = true) => {
+    const headers = ['Date', 'To', 'Referral', 'Type', 'Status', 'Phone', 'Email', 'Comments', 'Heat'];
+    const rows = referralsGiven.map((r: any) => [
+      new Date(r.created_at).toLocaleDateString(),
+      getMemberName(r.to_member),
+      r.contact_name,
+      r.referral_type,
+      r.status,
+      r.phone,
+      r.email,
+      `"${r.comments}"`,
+      r.heat
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + (withHeaders ? headers.join(",") + "\n" : "")
+      + rows.map((e: any[]) => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "referrals_given.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="p-6 md:p-8 space-y-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">My Referrals</h1>
-        <p className="text-muted-foreground">
-          Track all referrals you've given and received
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-card p-6">
-          <p className="text-sm text-muted-foreground mb-2">Total Referrals</p>
-          <p className="text-3xl font-bold gold-text">{userReferrals.length}</p>
-        </div>
-        <div className="glass-card p-6">
-          <p className="text-sm text-muted-foreground mb-2">Given</p>
-          <p className="text-3xl font-bold text-primary">
-            {userReferrals.filter((r: any) => r.from_member === user?.id).length}
-          </p>
-        </div>
-        <div className="glass-card p-6">
-          <p className="text-sm text-muted-foreground mb-2">Received</p>
-          <p className="text-3xl font-bold text-secondary">
-            {userReferrals.filter((r: any) => r.to_member === user?.id).length}
-          </p>
+    <div className="p-4 md:p-6 space-y-6 print:p-0">
+      {/* Report Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
+        <div>
+          <h1 className="text-2xl font-bold gold-text">Referrals Given</h1>
+          <p className="text-muted-foreground text-sm">Track referrals you have sent to other members.</p>
         </div>
       </div>
 
-      {/* Referrals List */}
-      <div className="glass-card p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-6">All Referrals</h2>
+      {/* Filters (Mock functionality for UI match) */}
+      <div className="glass-card p-4 flex flex-wrap gap-4 items-end print:hidden">
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">Start Date</label>
+          <input type="date" className="bg-white/5 border border-white/10 rounded px-3 py-1 text-sm text-foreground focus:outline-none focus:border-primary/50" defaultValue="2026-01-19" />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">End Date</label>
+          <input type="date" className="bg-white/5 border border-white/10 rounded px-3 py-1 text-sm text-foreground focus:outline-none focus:border-primary/50" defaultValue="2026-02-18" />
+        </div>
+        <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 rounded text-sm font-semibold transition-colors">
+          Filter
+        </button>
+      </div>
 
-        {userReferrals.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Date</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">From</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">To</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Name</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Type</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Heat</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Actions</th>
+      {/* Report Container */}
+      <div className="glass-card overflow-hidden border-white/10 print:shadow-none print:border-none print:bg-white print:text-black">
+
+        {/* Info Header */}
+        <div className="p-4 border-b border-white/10 bg-white/5 flex flex-wrap justify-between items-center gap-4 text-sm print:bg-white print:border-none">
+          <div>
+            <span className="block font-bold text-lg text-foreground print:text-black">Chapter : Referrals Given Report</span>
+            <div className="grid grid-cols-2 gap-x-8 mt-2 text-xs text-muted-foreground print:text-gray-600">
+              <div>Running User</div>
+              <div className="font-semibold text-foreground print:text-black">{user?.name || 'Member'}</div>
+              <div>Run At</div>
+              <div className="font-semibold text-foreground print:text-black">{new Date().toLocaleString()}</div>
+              <div>Chapter</div>
+              <div className="font-semibold text-foreground print:text-black">Nagarbhavi Brigades</div>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap print:hidden">
+            <button onClick={handleEditClick} className={`text-xs px-3 py-1.5 rounded font-medium shadow-sm transition-all ${selectedReferralId ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}>Edit / Delete Slips</button>
+            <button onClick={() => handleExport(false)} className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 text-xs px-3 py-1.5 rounded font-medium transition-all">Export without Headers</button>
+            <button onClick={() => handleExport(true)} className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 text-xs px-3 py-1.5 rounded font-medium transition-all">Export</button>
+            <button onClick={handlePrint} className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 text-xs px-3 py-1.5 rounded font-medium transition-all">Print</button>
+          </div>
+        </div>
+
+        {/* Warning Banner */}
+        <div className="bg-amber-500/10 text-amber-500 text-[10px] md:text-xs p-3 text-center border-b border-amber-500/20 font-medium print:bg-amber-50 print:text-amber-800 print:border-amber-200">
+          Slips associated with PALMS reports that have not been submitted can be edited. If the slip you want to edit has a status of completed, please contact your Vice President to have him/her unlock the report for you.
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead>
+              <tr className="border-b border-white/10 bg-white/5 text-muted-foreground print:bg-gray-100 print:text-black print:border-gray-300">
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Date</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">To</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Referral</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Inside/Outside</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Status</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Phone Number</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Email</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Comments</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Referral Temp</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Tracking Sheet Status</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">PALMS Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10 print:divide-gray-200 print:text-black">
+              {referralsGiven.length > 0 ? (
+                referralsGiven.map((ref: any, index: number) => {
+                  const isSelected = selectedReferralId === ref._id;
+                  return (
+                    <tr
+                      key={ref._id}
+                      onClick={() => setSelectedReferralId(isSelected ? null : ref._id)}
+                      className={`cursor-pointer transition-colors ${isSelected
+                        ? 'bg-primary/10 border-l-2 border-primary print:bg-red-100'
+                        : 'hover:bg-white/5 print:hover:bg-gray-50'
+                        }`}
+                    >
+                      <td className="py-3 px-4 text-slate-300 print:text-black">{new Date(ref.created_at).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 font-medium text-foreground print:text-black">{getMemberName(ref.to_member)}</td>
+                      <td className="py-3 px-4 text-slate-300 print:text-black">{ref.contact_name}</td>
+                      <td className="py-3 px-4 text-slate-300 print:text-black">{ref.referral_type} <span className="text-muted-foreground">(inside)</span></td>
+                      <td className="py-3 px-4 font-medium text-slate-300 print:text-black">Call Required</td>
+                      <td className="py-3 px-4 font-mono text-muted-foreground print:text-black">{ref.phone}</td>
+                      <td className="py-3 px-4 text-muted-foreground print:text-black">{ref.email}</td>
+                      <td className="py-3 px-4 max-w-[200px] truncate text-muted-foreground print:text-black" title={ref.comments}>{ref.comments}</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`inline-block w-6 h-6 leading-6 rounded-full text-white font-bold text-[10px] ${ref.heat === 'Hot' ? 'bg-red-600' : ref.heat === 'Warm' ? 'bg-amber-500' : 'bg-blue-500'}`}>
+                          {ref.heat === 'Hot' ? 5 : ref.heat === 'Warm' ? 3 : 1}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground italic print:text-gray-500">
+                        {ref.status === 'New' ? 'Not Contacted Yet' : ref.status}
+                      </td>
+                      <td className="py-3 px-4 text-green-500 font-medium print:text-green-700">Completed</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={11} className="py-12 text-center text-muted-foreground print:text-gray-500">
+                    No referrals given in this period.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {userReferrals.map((ref: any) => (
-                  <tr key={ref._id} className="border-b border-white/5 hover:bg-white/5 transition">
-                    <td className="py-3 px-4 text-muted-foreground text-xs">{new Date(ref.created_at).toLocaleDateString()}</td>
-                    <td className="py-3 px-4 text-sm">{getMemberName(ref.from_member)}</td>
-                    <td className="py-3 px-4 text-sm">{getMemberName(ref.to_member)}</td>
-                    <td className="py-3 px-4 text-sm font-semibold">{ref.contact_name}</td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">{ref.referral_type}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${ref.heat === 'Hot' ? 'bg-red-500/20 text-red-300' :
-                        ref.heat === 'Warm' ? 'bg-yellow-500/20 text-yellow-300' :
-                          'bg-blue-500/20 text-blue-300'
-                        }`}>
-                        {ref.heat}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${ref.status === 'Closed' ? 'bg-green-500/20 text-green-300' :
-                        ref.status === 'Approved' ? 'bg-blue-500/20 text-blue-300' :
-                          'bg-yellow-500/20 text-yellow-300'
-                        }`}>
-                        {ref.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      {/* Only show action for the receiver and if not closed */}
-                      {ref.to_member === user?.id && ref.status !== 'Closed' && (
-                        <button
-                          onClick={() => handleRecordRevenue(ref)}
-                          className="text-xs bg-primary/20 hover:bg-primary/30 text-primary px-2 py-1 rounded transition"
-                        >
-                          Record Business
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <Gift className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground">No referrals yet</p>
-          </div>
-        )}
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <style jsx global>{`
+        @media print {
+          /* Page Setup */
+          @page {
+            size: landscape;
+            margin: 5mm;
+          }
+
+          /* Force White Background Everywhere */
+          html, body, div, span, applet, object, iframe,
+          h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+          a, abbr, acronym, address, big, cite, code,
+          del, dfn, em, img, ins, kbd, q, s, samp,
+          small, strike, strong, sub, sup, tt, var,
+          b, u, i, center,
+          dl, dt, dd, ol, ul, li,
+          fieldset, form, label, legend,
+          table, caption, tbody, tfoot, thead, tr, th, td,
+          article, aside, canvas, details, embed, 
+          figure, figcaption, footer, header, hgroup, 
+          menu, nav, output, ruby, section, summary,
+          time, mark, audio, video {
+            background-color: white !important;
+            color: black !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+          }
+
+          /* Explicitly Hide UI Elements */
+          nav, aside, header, .sidebar, .navbar, .no-print, 
+          input, select, .hidden-print, .print\:hidden
+          {
+            display: none !important;
+          }
+          
+          /* Hide Buttons explicitly */
+          button {
+            display: none !important;
+          }
+
+          /* Layout Resets for Print */
+          body {
+            position: relative;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            zoom: 60%; /* Safe zoom for landscape */
+            overflow: visible !important;
+          }
+
+          /* Ensure Main Content is Visible and Full Width */
+          main, .flex-1, #root, #__next {
+             display: block !important;
+             width: 100% !important;
+             margin: 0 !important;
+             padding: 0 !important;
+             overflow: visible !important;
+          }
+
+          /* Table Styling */
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: fixed !important; 
+            font-size: 10px !important;
+          }
+
+          th, td {
+            border: 1px solid #000 !important; /* Start black border */
+            padding: 4px !important;
+            word-wrap: break-word !important;
+          }
+
+          /* Column Widths to Ensure Fit */
+          th:nth-child(1), td:nth-child(1) { width: 7%; }
+          th:nth-child(2), td:nth-child(2) { width: 9%; }
+          th:nth-child(3), td:nth-child(3) { width: 9%; }
+          th:nth-child(4), td:nth-child(4) { width: 8%; }
+          th:nth-child(5), td:nth-child(5) { width: 8%; }
+          th:nth-child(6), td:nth-child(6) { width: 9%; }
+          th:nth-child(7), td:nth-child(7) { width: 14%; word-break: break-all; }
+          th:nth-child(8), td:nth-child(8) { width: 15%; }
+          th:nth-child(9), td:nth-child(9) { width: 5%; text-align: center; }
+          th:nth-child(10), td:nth-child(10) { width: 8%; }
+          th:nth-child(11), td:nth-child(11) { width: 8%; }
+
+          /* Visual Cleanup */
+          .rounded-full {
+             border: 1px solid black !important;
+             color: black !important;
+          }
+        }
+      `}</style>
 
       <RecordRevenueModal
         open={isRevenueModalOpen}
         onOpenChange={setIsRevenueModalOpen}
         referral={selectedReferral}
         onSuccess={handleRevenueSuccess}
+      />
+
+      <EditReferralModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        referral={selectedReferral}
+        onSuccess={handleEditSuccess}
+        members={members}
       />
     </div>
   );

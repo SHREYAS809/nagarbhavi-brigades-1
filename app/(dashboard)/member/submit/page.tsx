@@ -82,7 +82,7 @@ export default function SubmitReferralPage() {
             {/* Members Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredMembers
-                    .filter(m => m._id !== user?.id) // Don't show self
+                    .filter(m => m._id !== user?.id && m.role !== 'admin') // Don't show self or admins
                     .map(member => (
                         <div key={member._id} className="glass-card p-6 flex flex-col gap-4 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => handleMemberSelect(member._id)}>
                             <div className="flex items-start justify-between">
@@ -135,7 +135,7 @@ export default function SubmitReferralPage() {
                 onOpenChange={setIsModalOpen}
                 onSuccess={handleSuccess}
                 currentMemberId={user?.id || ''}
-            // initialToMemberId={selectedMemberId} // Need to add this to modal
+                selectedMemberId={selectedMemberId} // Pass selected member
             />
         </div>
     );

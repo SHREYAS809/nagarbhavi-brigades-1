@@ -46,14 +46,15 @@ export function CreateMeetingModal({
         try {
             const payload = {
                 title: formData.title,
-                date_time: `${formData.date}T${formData.time}`, // Combine date and time
+                date: formData.date, // Send date separately
+                time: formData.time, // Send time separately
+                date_time: `${formData.date}T${formData.time}`,
                 location: formData.location,
-                description: formData.description, // Backend might expect 'notes' or 'description'? Model uses 'lines' 13: 'notes': data.get('notes', ''),
-                // Wait, model uses 'notes'. Frontend sends 'description'. 
-                // Let's check modal form data. It has 'description'.
-                // So let's map description to notes.
+                description: formData.description,
                 notes: formData.description,
-                organizer_id: user?.id
+                organizer_id: user?.id,
+                type: 'Chapter Meeting', // Default type
+                fee: 0
             };
 
             const res = await api.createMeeting(user?.token || '', payload);

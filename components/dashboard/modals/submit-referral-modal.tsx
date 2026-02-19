@@ -21,6 +21,7 @@ interface SubmitReferralModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: (referralId: string) => void;
   currentMemberId: string;
+  selectedMemberId?: string | null;
 }
 
 export function SubmitReferralModal({
@@ -28,6 +29,7 @@ export function SubmitReferralModal({
   onOpenChange,
   onSuccess,
   currentMemberId,
+  selectedMemberId,
 }: SubmitReferralModalProps) {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -49,7 +51,15 @@ export function SubmitReferralModal({
     if (open && user?.token) {
       api.getUsers(user.token).then(setMembers).catch(console.error);
     }
-  }, [open, user]);
+    // Reset form or set selected member
+    if (open) {
+      if (selectedMemberId) {
+        setFormData(prev => ({ ...prev, toMemberId: selectedMemberId }));
+      } else {
+        setFormData(prev => ({ ...prev, toMemberId: '' }));
+      }
+    }
+  }, [open, user, selectedMemberId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,8 +131,8 @@ export function SubmitReferralModal({
     }
   };
 
-  // Filter out current user from members list
-  const otherMembers = members.filter(m => m.id !== currentMemberId);
+  // Filter out current user and admins from members list
+  const otherMembers = members.filter(m => m._id !== currentMemberId && m.role !== 'admin');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -153,21 +163,30 @@ export function SubmitReferralModal({
             <Label htmlFor="toMember" className="text-sm font-medium">
               To Member
             </Label>
-            <select
-              id="toMember"
-              name="toMemberId"
-              value={formData.toMemberId}
-              onChange={handleChange}
-              className="glass-input w-full"
-              required
-            >
-              <option value="">Select a member</option>
-              {otherMembers.map((member: any) => (
-                <option key={member._id} value={member._id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
+            {selectedMemberId ? (
+              // If a member is pre-selected, just show their name (read-only)
+              <Input
+                value={members.find(m => m._id === selectedMemberId)?.name || 'Loading...'}
+                disabled
+                className="glass-input bg-white/10 text-foreground font-semibold border-primary/50"
+              />
+            ) : (
+              <select
+                id="toMember"
+                name="toMemberId"
+                value={formData.toMemberId}
+                onChange={handleChange}
+                className="glass-input w-full text-foreground [&>option]:text-black"
+                required
+              >
+                <option value="">Select a member</option>
+                {otherMembers.map((member: any) => (
+                  <option key={member._id} value={member._id}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Referral Name */}
@@ -197,7 +216,7 @@ export function SubmitReferralModal({
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
-                className="glass-input w-full"
+                className="glass-input w-full text-foreground [&>option]:text-black"
               >
                 <option>Tier 1</option>
                 <option>Tier 2</option>
@@ -214,7 +233,7 @@ export function SubmitReferralModal({
                 name="heat"
                 value={formData.heat}
                 onChange={handleChange}
-                className="glass-input w-full"
+                className="glass-input w-full text-foreground [&>option]:text-black"
               >
                 <option>Hot</option>
                 <option>Warm</option>

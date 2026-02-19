@@ -6,7 +6,9 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Lock, User, Phone, Briefcase, UserPlus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Mail, Lock, User, Phone, Briefcase, UserPlus, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 export function RegisterForm() {
@@ -16,6 +18,7 @@ export function RegisterForm() {
         password: '',
         phone: '',
         business_category: '',
+        membership_plan: '12 Months',
     });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -59,6 +62,23 @@ export function RegisterForm() {
                         <div className="relative">
                             <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                             <Input id="name" value={formData.name} onChange={handleChange} className="pl-10 glass-input" placeholder="John Doe" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="membership_plan">Membership Plan</Label>
+                        <div className="relative">
+                            <Clock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground z-10" />
+                            <select
+                                id="membership_plan"
+                                value={formData.membership_plan}
+                                onChange={(e) => setFormData({ ...formData, membership_plan: e.target.value })}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-10 glass-input"
+                            >
+                                <option value="6 Months" className="text-black">6 Months</option>
+                                <option value="12 Months" className="text-black">12 Months (Standard)</option>
+                                <option value="Lifetime" className="text-black">Lifetime Membership</option>
+                            </select>
                         </div>
                     </div>
 

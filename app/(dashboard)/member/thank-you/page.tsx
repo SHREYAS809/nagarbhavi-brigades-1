@@ -117,7 +117,7 @@ export default function SubmitTYFCBPage() {
                                 <select
                                     value={selectedMemberId}
                                     onChange={(e) => setSelectedMemberId(e.target.value)}
-                                    className="glass-input w-full pl-10"
+                                    className="glass-input w-full pl-10 [&>option]:text-black"
                                     required
                                 >
                                     <option value="">Select a member</option>
@@ -156,7 +156,7 @@ export default function SubmitTYFCBPage() {
                                 <select
                                     value={referralType}
                                     onChange={(e) => setReferralType(e.target.value)}
-                                    className="glass-input w-full"
+                                    className="glass-input w-full [&>option]:text-black"
                                 >
                                     <option>New Business</option>
                                     <option>Repeat Business</option>
@@ -167,7 +167,7 @@ export default function SubmitTYFCBPage() {
                                 <select
                                     value={tier}
                                     onChange={(e) => setTier(e.target.value)}
-                                    className="glass-input w-full"
+                                    className="glass-input w-full [&>option]:text-black"
                                 >
                                     <option>Tier 1 (Inside)</option>
                                     <option>Tier 2 (Outside)</option>

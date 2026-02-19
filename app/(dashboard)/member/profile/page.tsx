@@ -1,23 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/authContext';
-import { mockMembers } from '@/lib/mockData';
+import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Mail, Phone, Briefcase, Camera, Lock } from 'lucide-react';
+import { User, Mail, Phone, Briefcase, Camera, Lock, Loader2 } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const currentMember = mockMembers.find(m => m.id === user?.id);
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: currentMember?.name || '',
-    email: currentMember?.email || '',
-    phone: currentMember?.phone || '',
-    businessCategory: currentMember?.businessCategory || '',
-    bio: 'Passionate about growing the Nagarbhavi Brigades community',
+    name: '',
+    email: '',
+    phone: '',
+    businessCategory: '',
+    membershipPlan: '',
+    bio: '',
+    photo: '',
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -25,6 +30,42 @@ export default function ProfilePage() {
     new: '',
     confirm: '',
   });
+
+  useEffect(() => {
+    if (user) {
+      // Pre-fill from auth context initially
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        // Other fields might be missing in auth context, so we should fetch full profile if possible
+        // But for now, we rely on what we have + potentially a user fetch if we had a dedicated "me" endpoint
+        // Since we modified getUser to return list, maybe we can fetch specific user by ID? 
+        // Or just trust what's in local storage?
+        // Let's try to fetch fresh data if possible, or just defaults.
+      }));
+
+      // Fetch fresh user data
+      if (user.token && user.id) {
+        // We don't have a direct "get me" but we can use the admin list or maybe add a "get user by id"
+        // Wait, users endpoint returns all users. We can filter.
+        api.getUsers(user.token).then(users => {
+          const me = users.find((u: any) => u._id === user.id);
+          if (me) {
+            setFormData({
+              name: me.name || '',
+              email: me.email || '',
+              phone: me.phone || '',
+              businessCategory: me.business_category || '', // Backend uses underscore
+              membershipPlan: me.membership_plan || '12 Months',
+              bio: me.bio || 'Passionate about growing the Nagarbhavi Brigades community',
+              photo: me.photo || '',
+            });
+          }
+        }).catch(console.error);
+      }
+    }
+  }, [user]);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -34,6 +75,104 @@ export default function ProfilePage() {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit
+        toast({
+          title: 'Error',
+          description: 'Image size must be less than 1MB.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, photo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user || !user.token) return;
+    setIsLoading(true);
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        business_category: formData.businessCategory,
+        membership_plan: formData.membershipPlan,
+        bio: formData.bio,
+        photo: formData.photo,
+      };
+
+      await api.updateUser(user.token, user.id, payload);
+
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile information has been saved.',
+      });
+      // Optionally update auth context if name/email changed
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update profile.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!user || !user.token) return;
+
+    if (passwordData.new !== passwordData.confirm) {
+      toast({
+        title: 'Error',
+        description: 'New passwords do not match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (passwordData.new.length < 6) {
+      toast({
+        title: 'Error',
+        description: 'Password must be at least 6 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsPasswordLoading(true);
+    try {
+      await api.changePassword(user.token, {
+        current_password: passwordData.current,
+        new_password: passwordData.new,
+      });
+
+      toast({
+        title: 'Password Changed',
+        description: 'Your password has been updated successfully.',
+      });
+
+      setPasswordData({ current: '', new: '', confirm: '' });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to change password. Check current password.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPasswordLoading(false);
+    }
   };
 
   return (
@@ -49,18 +188,35 @@ export default function ProfilePage() {
         <div className="lg:col-span-1">
           <div className="glass-card p-6 space-y-4 sticky top-8">
             <div className="flex justify-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-                <User className="w-12 h-12 text-primary-foreground" />
+              <div className="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center overflow-hidden border-2 border-primary/20">
+                {formData.photo ? (
+                  <img src={formData.photo} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-12 h-12 text-primary-foreground" />
+                )}
               </div>
             </div>
             <div className="text-center">
-              <p className="font-semibold text-foreground">{currentMember?.name}</p>
-              <p className="text-xs text-muted-foreground">{currentMember?.businessCategory}</p>
+              <p className="font-semibold text-foreground">{formData.name || 'Member'}</p>
+              <p className="text-xs text-muted-foreground">{formData.businessCategory || 'Business Category'}</p>
             </div>
-            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2">
-              <Camera className="w-4 h-4" />
-              Change Photo
-            </Button>
+            <div className="relative">
+              <input
+                type="file"
+                id="photo-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={handlePhotoChange}
+              />
+              <Button
+                variant="outline"
+                className="w-full border-primary/20 hover:bg-primary/10 flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => document.getElementById('photo-upload')?.click()}
+              >
+                <Camera className="w-4 h-4" />
+                Change Photo
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -102,8 +258,10 @@ export default function ProfilePage() {
                     value={formData.email}
                     onChange={handleFormChange}
                     className="glass-input pl-10"
+                    disabled // Email usually shouldn't be changed easily as it's the ID
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">Contact admin to change email.</p>
               </div>
 
               {/* Phone */}
@@ -151,14 +309,19 @@ export default function ProfilePage() {
                   value={formData.bio}
                   onChange={handleFormChange}
                   rows={3}
-                  className="glass-input resize-none"
+                  className="glass-input resize-none w-full p-2"
                   placeholder="Tell us about yourself"
                 />
               </div>
             </div>
 
             <div className="pt-4 border-t border-white/10">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button
+                onClick={handleSaveProfile}
+                disabled={isLoading}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Save Changes
               </Button>
             </div>
@@ -225,7 +388,12 @@ export default function ProfilePage() {
             </div>
 
             <div className="pt-4 border-t border-white/10">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button
+                onClick={handleUpdatePassword}
+                disabled={isPasswordLoading}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                {isPasswordLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Update Password
               </Button>
             </div>

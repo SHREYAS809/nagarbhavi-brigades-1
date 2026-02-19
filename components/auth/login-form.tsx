@@ -139,12 +139,7 @@ export function LoginForm({ restrictedRole }: LoginFormProps) {
         </form>
 
         <div className="text-center text-sm text-muted-foreground border-t border-white/10 pt-4 space-y-2">
-          <p>
-            Don't have an account?{' '}
-            <Link href="/register" className="text-primary hover:underline font-medium">
-              Join Now
-            </Link>
-          </p>
+          {/* Registration disabled as per request */}
           <p className="text-xs">© 2024 Nagarbhavi Brigades. All rights reserved.</p>
         </div>
       </div>

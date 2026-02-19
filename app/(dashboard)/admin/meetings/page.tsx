@@ -8,6 +8,8 @@ import { CreateMeetingModal } from '@/components/dashboard/modals/create-meeting
 import { Calendar, MapPin, Users, Plus, Edit2, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+import { ViewParticipantsModal } from '@/components/dashboard/modals/view-participants-modal';
+
 export default function AdminMeetingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -15,6 +17,8 @@ export default function AdminMeetingsPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -47,28 +51,20 @@ export default function AdminMeetingsPage() {
     }
   };
 
-  const handleMeetingCreated = (newMeeting: any) => {
-    // If backend returns the inserted object with _id, use it. 
-    // If result is from insert_oneResult, we might need to refetch or assume structure.
-    // Usually my API wrapper returns json. If Flask returns `mongo.db.insert_one` result converted to json, 
-    // it might just contain `inserted_id`.
-    // Let's assume we need to re-fetch to be safe OR construct object.
-    // Easiest is to reload list or push if we know structure.
-    // Optimistic update:
-    // But we don't know _id if backend only returns { message: 'success' }.
-    // Let's check backend route `create_meeting`.
-    // It returns: jsonify({'message': 'Meeting created successfully', 'id': str(result.inserted_id)}), 201
-    // So we have ID. We can construct object.
-    // But simpler to just re-fetch for now or add dummy.
-    // For now, let's re-fetch.
+  const handleMeetingCreated = () => {
     if (user?.token) {
       api.getMeetings(user.token).then(setMeetings);
     }
   };
 
   const getMemberName = (id: string) => {
-    const m = members.find((u: any) => u.id === id);
+    const m = members.find((u: any) => u._id === id); // Fix: use _id not id
     return m ? m.name : 'Unknown';
+  };
+
+  const handleViewParticipants = (meeting: any) => {
+    setSelectedMeeting(meeting);
+    setIsParticipantsModalOpen(true);
   };
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading meetings...</div>;
@@ -115,24 +111,27 @@ export default function AdminMeetingsPage() {
                       <MapPin className="w-4 h-4 text-primary" />
                       {meeting.location}
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-muted-foreground cursor-pointer hover:text-primary transition-colors" onClick={() => handleViewParticipants(meeting)}>
                       <Users className="w-4 h-4 text-primary" />
-                      {meeting.registrants?.length || 0} registered
+                      <span className="underline decoration-dotted underline-offset-4">
+                        {meeting.participants?.length || 0} registered
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex gap-2 ml-4">
-                  <button className="p-2 hover:bg-white/10 rounded-lg transition">
+                  <button
+                    onClick={() => handleViewParticipants(meeting)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition"
+                    title="View Participants"
+                  >
                     <Eye className="w-4 h-4 text-muted-foreground hover:text-primary" />
                   </button>
-                  {/* Edit not implemented yet */}
-                  {/* <button className="p-2 hover:bg-white/10 rounded-lg transition">
-                    <Edit2 className="w-4 h-4 text-muted-foreground hover:text-primary" />
-                  </button> */}
                   <button
                     onClick={() => handleDelete(meeting._id)}
                     className="p-2 hover:bg-white/10 rounded-lg transition"
+                    title="Delete Meeting"
                   >
                     <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-400" />
                   </button>
@@ -165,6 +164,13 @@ export default function AdminMeetingsPage() {
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         onSuccess={handleMeetingCreated}
+      />
+
+      <ViewParticipantsModal
+        open={isParticipantsModalOpen}
+        onOpenChange={setIsParticipantsModalOpen}
+        meeting={selectedMeeting}
+        members={members}
       />
     </div>
   );

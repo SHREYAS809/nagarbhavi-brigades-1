@@ -41,12 +41,6 @@ export default function AdminLoginPage() {
                 </div>
 
                 <LoginForm restrictedRole="admin" />
-
-                <div className="text-center">
-                    <a href="/login" className="text-xs text-gray-500 hover:text-white transition-colors">
-                        Return to Member Login
-                    </a>
-                </div>
             </div>
         </div>
     );

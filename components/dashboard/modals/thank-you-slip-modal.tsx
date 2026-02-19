@@ -64,7 +64,7 @@ Your referral strengthens our community and creates valuable connections.
 Best regards,
 Nagarbhavi Brigades Team
     `;
-    
+
     const blob = new Blob([content], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -87,53 +87,54 @@ Nagarbhavi Brigades Team
         </DialogHeader>
 
         {/* Thank You Slip Content */}
-        <div className="bg-gradient-to-b from-primary/5 to-transparent border-2 border-primary/30 rounded-lg p-8 my-6 space-y-6 print:border-black print:text-black">
+        {/* Thank You Slip Content */}
+        <div className="bg-white border-2 border-gray-300 rounded-lg p-8 my-6 space-y-6 text-black shadow-lg print:border-black print:text-black">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold gold-text">NAGARBHAVI BRIGADES</h1>
-            <p className="text-sm text-muted-foreground">Premium Business Networking Platform</p>
+            <h1 className="text-2xl font-bold text-black">NAGARBHAVI BRIGADES</h1>
+            <p className="text-sm text-gray-500">Premium Business Networking Platform</p>
           </div>
 
           {/* Main Message */}
           <div className="text-center space-y-3">
-            <div className="flex items-center justify-center gap-2 text-primary mb-4">
+            <div className="flex items-center justify-center gap-2 text-green-600 mb-4">
               <Check className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">
+            <h2 className="text-xl font-bold text-black">
               THANK YOU FOR THE REFERRAL
             </h2>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            <p className="text-sm text-gray-600 max-w-sm mx-auto">
               We deeply appreciate your commitment to growing our community and creating valuable connections.
             </p>
           </div>
 
           {/* Details */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">REFERRAL ID</p>
-              <p className="text-lg font-mono font-bold text-primary mt-1">{referralId}</p>
+              <p className="text-xs text-gray-500 font-semibold">REFERRAL ID</p>
+              <p className="text-lg font-mono font-bold text-black mt-1">{referralId}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">DATE</p>
-              <p className="text-lg font-semibold text-foreground mt-1">
+              <p className="text-xs text-gray-500 font-semibold">DATE</p>
+              <p className="text-lg font-semibold text-black mt-1">
                 {new Date().toLocaleDateString()}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">FROM</p>
-              <p className="text-sm font-semibold text-foreground mt-1">{fromMember?.name}</p>
+              <p className="text-xs text-gray-500 font-semibold">FROM</p>
+              <p className="text-sm font-semibold text-black mt-1">{fromMember?.name}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">TO</p>
-              <p className="text-sm font-semibold text-foreground mt-1">{toMember?.name}</p>
+              <p className="text-xs text-gray-500 font-semibold">TO</p>
+              <p className="text-sm font-semibold text-black mt-1">{toMember?.name}</p>
             </div>
             <div className="col-span-2">
-              <p className="text-xs text-muted-foreground font-semibold">REFERRAL INFORMATION</p>
+              <p className="text-xs text-gray-500 font-semibold">REFERRAL INFORMATION</p>
               <div className="space-y-1 mt-1">
-                <p className="text-sm font-semibold text-foreground">
+                <p className="text-sm font-semibold text-black">
                   {referralData?.referralName}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-600">
                   Type: {referralData?.type} • Heat: {referralData?.heat}
                 </p>
               </div>
@@ -141,15 +142,15 @@ Nagarbhavi Brigades Team
           </div>
 
           {/* Footer Message */}
-          <div className="text-center pt-4 border-t border-white/10">
-            <p className="text-xs text-muted-foreground italic">
+          <div className="text-center pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500 italic">
               Your contribution to Nagarbhavi Brigades helps build a stronger, more connected business community.
             </p>
           </div>
 
           {/* Footer */}
           <div className="text-center pt-2">
-            <p className="text-xs font-semibold text-primary">Nagarbhavi Brigades</p>
+            <p className="text-xs font-semibold text-black">Nagarbhavi Brigades</p>
           </div>
         </div>
 

@@ -1,77 +1,124 @@
 from flask import Blueprint, request, jsonify
-from backend.models.revenue import Revenue
+from backend.models import Revenue, User
+from backend.utils.extensions import db
 from backend.utils.auth import token_required, admin_required
+from sqlalchemy import or_
+import datetime
 
 revenue_bp = Blueprint('revenue', __name__)
 
 @revenue_bp.route('/', methods=['GET'])
 @token_required
 def get_revenue(current_user):
-    # If admin, return all. If member, return only theirs.
-    if current_user.get('role') == 'admin':
-        revenue = Revenue.get_all_revenue()
+    # Fetch revenue where user is beneficiary (Earned) OR user is creator (Given)
+    # Admin sees all?
+    if current_user.role == 'admin':
+        revenue = Revenue.query.order_by(Revenue.created_at.desc()).all()
     else:
-        # We need a get_by_member method in Revenue model
-        # Quick fix: fetch all and filter here (inefficient but works for MVP) or add method.
-        # Let's add method to model in next step or use direct mongo query here if lazy.
-        # Better: add get_by_member to model. 
-        # For now, let's assume get_all_revenue() exists and filter python side if list is small, 
-        # or use mongo.db.revenue.find({'member_id': ...})
-        # Fetch revenue where user is beneficiary (Earned) OR user is creator (Given)
-        from backend.utils.extensions import mongo
-        from bson.objectid import ObjectId
-        revenue = list(mongo.db.revenue.find({
-            '$or': [
-                {'member_id': current_user['_id']},
-                {'created_by': current_user['_id']}
-            ]
-        }))
+        # Use SQLAlchemy OR
+        revenue = Revenue.query.filter(
+            or_(
+                Revenue.member_id == current_user.id,
+                Revenue.created_by == current_user.id
+            )
+        ).order_by(Revenue.created_at.desc()).all()
 
+    result = []
     for r in revenue:
-        r['_id'] = str(r['_id'])
-        r['member_id'] = str(r['member_id'])
-        if 'created_by' in r:
-            r['created_by'] = str(r['created_by'])
-    return jsonify(revenue), 200
+        result.append({
+            'id': str(r.id),
+            '_id': str(r.id),
+            'amount': r.amount,
+            'type': r.type,
+            'member_id': str(r.member_id),
+            'created_by': str(r.created_by),
+            'referral_id': str(r.referral_id) if r.referral_id else None,
+            'notes': r.notes,
+            'date': r.date,
+            'created_at': r.created_at.isoformat() if r.created_at else None
+        })
+    return jsonify(result), 200
 
 @revenue_bp.route('/', methods=['POST'])
 @token_required
 def add_revenue(current_user):
     data = request.get_json()
-    data['created_by'] = current_user['_id']
-    Revenue.create_revenue(data)
-    return jsonify({'message': 'Revenue added'}), 201
+    
+    # Validation
+    try:
+        amount = float(data.get('amount'))
+        member_id = int(data.get('member_id')) # Member who GAVE the business (Referrer)
+    except (ValueError, TypeError):
+        return jsonify({'message': 'Invalid amount or member_id'}), 400
+
+    new_revenue = Revenue(
+        amount=amount,
+        type=data.get('type', 'Thank You For Closed Business'),
+        member_id=member_id,
+        created_by=current_user.id, # Current user RECEIVED the business
+        referral_id=data.get('referral_id'), # Optional
+        notes=data.get('notes'),
+        date=data.get('date', datetime.datetime.utcnow().strftime('%Y-%m-%d'))
+    )
+    
+    db.session.add(new_revenue)
+    db.session.commit()
+    
+    return jsonify({'message': 'Revenue added', 'id': str(new_revenue.id)}), 201
+
+# Admin routes for updating/deleting revenue? 
+# Usually revenue is immutable or requires strict audit. 
+# Implementing basic CRUD for now as per previous design.
 
 @revenue_bp.route('/<id>', methods=['PUT'])
 @token_required
 @admin_required
 def update_revenue(current_user, id):
     data = request.get_json()
-    Revenue.update_revenue(id, data)
+    revenue = Revenue.query.get(id)
+    if not revenue:
+        return jsonify({'message': 'Record not found'}), 404
+        
+    if 'amount' in data:
+        revenue.amount = data['amount']
+    if 'notes' in data:
+        revenue.notes = data['notes']
+        
+    db.session.commit()
     return jsonify({'message': 'Revenue updated'}), 200
 
 @revenue_bp.route('/<id>', methods=['DELETE'])
 @token_required
 @admin_required
 def delete_revenue(current_user, id):
-    Revenue.delete_revenue(id)
+    revenue = Revenue.query.get(id)
+    if not revenue:
+        return jsonify({'message': 'Record not found'}), 404
+        
+    db.session.delete(revenue)
+    db.session.commit()
     return jsonify({'message': 'Revenue deleted'}), 200
-
 @revenue_bp.route('/total', methods=['GET'])
 @token_required
 @admin_required
 def get_total_revenue(current_user):
-    revenue = Revenue.get_all_revenue()
-    total = sum(r.get('amount', 0) for r in revenue)
+    revenue = Revenue.query.all()
+    total = sum(r.amount for r in revenue)
     return jsonify({'total': total}), 200
 
 @revenue_bp.route('/monthly', methods=['GET'])
 @token_required
 @admin_required
 def get_monthly_revenue(current_user):
-    revenue = Revenue.get_all_revenue()
+    revenue = Revenue.query.all()
     monthly = {}
     for r in revenue:
-        month = r.get('month', 'Unknown')
-        monthly[month] = monthly.get(month, 0) + r.get('amount', 0)
+        # Assuming date is string YYYY-MM-DD
+        try:
+            date_obj = datetime.datetime.strptime(r.date, '%Y-%m-%d')
+            month = date_obj.strftime('%B')
+        except:
+            month = 'Unknown'
+            
+        monthly[month] = monthly.get(month, 0) + r.amount
     return jsonify(monthly), 200

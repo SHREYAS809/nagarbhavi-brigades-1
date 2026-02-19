@@ -9,15 +9,23 @@ from backend.routes.meeting_routes import meeting_bp
 from backend.routes.event_routes import event_bp
 from backend.routes.notification_routes import notification_bp
 from backend.routes.user_routes import user_bp
+from backend.routes.guest_routes import guest_bp
+from backend.routes.learning_routes import learning_bp
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
     # Initialize Extensions
+    # Initialize Extensions
     mongo.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
+    
+    from backend.utils.extensions import db, migrate
+    db.init_app(app)
+    migrate.init_app(app, db)
+    
     CORS(app) # Enable CORS for all routes
 
     # Register Blueprints
@@ -28,6 +36,8 @@ def create_app():
     app.register_blueprint(event_bp, url_prefix='/api/events')
     app.register_blueprint(notification_bp, url_prefix='/api/notifications')
     app.register_blueprint(user_bp, url_prefix='/api/users')
+    app.register_blueprint(guest_bp, url_prefix='/api/guests')
+    app.register_blueprint(learning_bp, url_prefix='/api/learning')
 
     @app.route('/', methods=['GET'])
     def index():

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { Sidebar } from '@/components/dashboard/sidebar';
 
@@ -12,12 +12,17 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/login');
+      if (pathname?.startsWith('/admin')) {
+        router.push('/login/admin');
+      } else {
+        router.push('/login');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, pathname]);
 
   if (!isAuthenticated) {
     return null;

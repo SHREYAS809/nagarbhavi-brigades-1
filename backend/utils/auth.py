@@ -2,7 +2,7 @@ import jwt
 import datetime
 from functools import wraps
 from flask import request, jsonify, current_app
-from backend.models.user import User
+from backend.models import User
 
 def token_required(f):
     @wraps(f)
@@ -16,7 +16,7 @@ def token_required(f):
 
         try:
             data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = User.find_by_id(data['user_id'])
+            current_user = User.query.get(data['user_id'])
             if not current_user:
                  return jsonify({'message': 'Token is invalid!'}), 401
         except Exception as e:
@@ -29,7 +29,7 @@ def token_required(f):
 def admin_required(f):
     @wraps(f)
     def decorated(current_user, *args, **kwargs):
-        if current_user.get('role') != 'admin':
+        if current_user.role != 'admin':
             return jsonify({'message': 'Admin privilege required!'}), 403
         return f(current_user, *args, **kwargs)
     return decorated

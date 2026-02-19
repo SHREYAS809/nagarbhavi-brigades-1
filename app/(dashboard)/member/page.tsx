@@ -3,14 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { api } from '@/lib/api';
-import { StatCard } from '@/components/dashboard/stat-card';
-import { PerformanceChart } from '@/components/charts/performance-chart';
-import { HeatDistributionChart } from '@/components/charts/heat-distribution-chart';
-import { Gift, TrendingUp, Zap, Users, Calendar } from 'lucide-react';
-import { mockPerformanceData, mockHeatDistribution } from '@/lib/mockData'; // Keep charts mock for now if backend doesn't support
+import { DashboardMetricCard } from '@/components/dashboard/dashboard-metric-card';
+import { ReferralActivityChart } from '@/components/charts/referral-activity-chart';
+import { Wallet, Briefcase, GraduationCap, Coffee, UserCheck, Inbox, Send, ExternalLink, Printer, FileText, LogOut, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function MemberDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { toast } = useToast();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,8 +23,12 @@ export default function MemberDashboard() {
         try {
           const dashboardData = await api.getDashboardData(user.token);
           setData(dashboardData);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Failed to fetch dashboard data", error);
+          if (error.message.includes('401')) {
+            logout();
+            window.location.href = '/login'; // Force redirect
+          }
         } finally {
           setLoading(false);
         }
@@ -32,142 +39,204 @@ export default function MemberDashboard() {
     fetchData();
   }, [user]);
 
-  if (loading) return <div className="p-8 text-center">Loading dashboard...</div>;
-  if (!data) return <div className="p-8 text-center">Failed to load data.</div>;
+  if (loading) return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading dashboard...</div>;
+  if (!data) return <div className="p-8 text-center text-red-400">Failed to load data.</div>;
 
   const { referrals, revenue, meetings, members } = data;
 
-  // Helper to get member name
-  const getMemberName = (id: string) => {
-    const m = members.find((u: any) => u.id === id);
-    return m ? m.name : 'Unknown';
-  };
-
-  // Robustness: Ensure we have the current user's ID, even if local storage is stale
+  // Robustness: Ensure we have the current user's ID
   const currentUserId = user?.id || members.find((m: any) => m.email === user?.email)?.id;
 
   const referralsGiven = referrals.filter((r: any) => r.from_member === currentUserId).length;
   const referralsReceived = referrals.filter((r: any) => r.to_member === currentUserId).length;
 
-  // Calculate Real Revenue
-  // Revenue Generated = Business I gave to others (created_by === me)
-  // Revenue Received = Business given to me (member_id === me)
-
+  // Calculate Revenue
   const revenueGivenList = revenue.filter((r: any) => r.created_by === currentUserId);
   const revenueReceivedList = revenue.filter((r: any) => r.member_id === currentUserId);
 
   const revenueGenerated = revenueGivenList.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
   const revenueReceivedVal = revenueReceivedList.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
 
-  const meetingsCount = meetings.length;
+  const meetingsCount = meetings.length; // Assuming all fetched meetings involve the user or are relevant
 
-  // Filter referrals for the table (involved ones)
-  const myReferrals = referrals.filter((r: any) => r.from_member === currentUserId || r.to_member === currentUserId);
+  // Mock Data for Missing Features (Visitors/CEUs logic would go here)
+  const visitorsCount = 0;
+  const ceusCount = 0;
+
+  // Chart Data Logic moved to component
 
 
   return (
-    <div className="p-6 md:p-8 space-y-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Welcome, {user?.name || 'Member'}!</h1>
-        <p className="text-muted-foreground">
-          Track your referrals, meetings, and networking activities
-        </p>
-      </div>
+    <div className="p-4 md:p-8 space-y-6 max-w-[1600px] mx-auto">
+      {/* Top Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <div>
+          <h1 className="text-3xl font-bold text-red-600 tracking-tight">Hello {user?.name?.split(' ')[0] || 'Member'}</h1>
+        </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard
-          title="Referrals Given"
-          value={referralsGiven}
-          icon={Gift}
-          trend={{ value: 0, isPositive: true }}
-          description="Total"
-        />
-        <StatCard
-          title="Referrals Received"
-          value={referralsReceived}
-          icon={TrendingUp}
-          trend={{ value: 0, isPositive: true }}
-          description="Total"
-        />
-        <StatCard
-          title="Revenue Generated"
-          value={`₹${(revenueGenerated / 1000).toFixed(0)}K`}
-          icon={Zap}
-          trend={{ value: 0, isPositive: true }}
-          description="Business Given"
-        />
-        <StatCard
-          title="Revenue Received"
-          value={`₹${(revenueReceivedVal / 1000).toFixed(0)}K`}
-          icon={Users}
-          trend={{ value: 0, isPositive: true }}
-          description="Earnings"
-        />
-        <StatCard
-          title="Meetings"
-          value={meetingsCount}
-          icon={Calendar}
-          trend={{ value: 0, isPositive: true }}
-          description="Total"
-        />
-      </div>
-
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PerformanceChart data={mockPerformanceData} />
-        <HeatDistributionChart data={mockHeatDistribution} />
-      </div>
-
-      {/* Recent Activity */}
-      <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Recent Referrals</h3>
-        {myReferrals.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">From</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">To</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Contact</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Tier</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {myReferrals.slice(0, 5).map((ref: any) => (
-                  <tr key={ref._id} className="border-b border-white/5 hover:bg-white/5 transition">
-                    <td className="py-3 px-4">{getMemberName(ref.from_member)}</td>
-                    <td className="py-3 px-4">{getMemberName(ref.to_member)}</td>
-                    <td className="py-3 px-4">{ref.contact_name}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${ref.referral_tier === 'Hot' ? 'bg-red-500/20 text-red-300' :
-                        ref.referral_tier === 'Warm' ? 'bg-yellow-500/20 text-yellow-300' :
-                          'bg-blue-500/20 text-blue-300'
-                        }`}>
-                        {ref.referral_tier}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${ref.status === 'Closed' ? 'bg-green-500/20 text-green-300' :
-                        ref.status === 'Open' ? 'bg-blue-500/20 text-blue-300' :
-                          'bg-yellow-500/20 text-yellow-300'
-                        }`}>
-                        {ref.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search..." className="pl-9 w-64 glass-input bg-white/5 border-white/10" />
           </div>
-        ) : (
-          <p className="text-muted-foreground text-center py-8">
-            No referrals yet. Start networking!
-          </p>
-        )}
+
+          <div className="bg-white/5 border border-white/10 px-4 py-2 rounded text-sm font-medium text-foreground">
+            Nagarbhavi Brigades
+          </div>
+
+          <div className="bg-white/5 border border-white/10 px-4 py-2 rounded text-sm text-foreground flex flex-col items-center leading-none">
+            <span className="text-[10px] text-muted-foreground uppercase">Renewal Due Date</span>
+            <span className="font-bold">04/01/2027</span>
+          </div>
+
+          <Button variant="outline" className="border-red-600/50 text-red-500 hover:bg-red-600/10 hover:text-red-400">
+            Regional Website
+          </Button>
+
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black font-bold text-xs shadow-lg shadow-yellow-500/20">
+            MSP
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => { logout(); window.location.href = '/login'; }}
+            className="text-muted-foreground hover:text-red-500"
+            title="Logout"
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
+
+      {/* Main Grid Layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        {/* Left Column: Chart (Span 5) */}
+        <div className="xl:col-span-5 flex flex-col gap-6">
+          <div className="h-[400px] xl:h-[500px]">
+            <ReferralActivityChart referrals={referrals} currentUserId={currentUserId} />
+          </div>
+        </div>
+
+        {/* Right Column: Metrics Grid (Span 7) */}
+        <div className="xl:col-span-7 space-y-6">
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            {/* Revenue Received */}
+            <DashboardMetricCard
+              title="Revenue Received"
+              value={`₹${revenueReceivedVal.toLocaleString()}`}
+              icon={Wallet} // Changed from Zap
+              variant="default"
+              actions={[
+                { label: 'Say Thank You', variant: 'destructive', className: 'bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:text-red-400', href: '/member/thank-you' },
+                { label: 'Review', variant: 'ghost', href: '/member/revenue' }
+              ]}
+            />
+
+            <DashboardMetricCard
+              title="Referrals Received"
+              value={referralsReceived}
+              icon={Inbox} // Changed from Gift
+              actions={[
+                { label: 'Track Online', variant: 'destructive', className: 'bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:text-red-400 col-span-2', href: '/member/referrals-received' }
+              ]}
+            />
+
+            <DashboardMetricCard
+              title="Referrals Given"
+              value={referralsGiven}
+              icon={Send} // Changed from TrendingUp
+              variant="highlight" // Highlighted as it matches the chart
+              actions={[
+                { label: 'Give Referral', variant: 'destructive', className: 'bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:text-red-400', href: '/member/submit' },
+                { label: 'Review', variant: 'ghost', href: '/member/referral' }
+              ]}
+            />
+
+            <DashboardMetricCard
+              title="Business Generated"
+              value={`₹${revenueGenerated.toLocaleString()}`}
+              icon={Briefcase} // Changed from Award
+            // No actions on this one in screenshot? Or implies submission elsewhere
+            />
+
+            <DashboardMetricCard
+              title="Guests Invited"
+              value={visitorsCount}
+              icon={UserCheck}
+              actions={[
+                {
+                  label: 'Guest Portal',
+                  variant: 'destructive',
+                  className: 'bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:text-red-400 col-span-2',
+                  href: '/member/guests'
+                }
+              ]}
+            />
+
+            <DashboardMetricCard
+              title="Learning Credits"
+              value={ceusCount}
+              icon={GraduationCap}
+              actions={[
+                {
+                  label: 'Submit',
+                  variant: 'destructive',
+                  className: 'bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:text-red-400',
+                  href: '/member/learning'
+                },
+                {
+                  label: 'Review',
+                  variant: 'ghost',
+                  href: '/member/learning'
+                }
+              ]}
+            />
+
+            <DashboardMetricCard
+              title="Connects"
+              value={meetingsCount}
+              icon={Coffee} // Changed from Users
+              actions={[
+                { label: 'Log Meeting', variant: 'destructive', className: 'bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:text-red-400', href: '/member/meetings' },
+                { label: 'Review', variant: 'ghost', href: '/member/meetings' }
+              ]}
+            />
+
+          </div>
+
+          {/* Bottom Actions */}
+          <div className="flex flex-col gap-3">
+            <Button
+              variant="outline"
+              onClick={() => window.print()}
+              className="w-full justify-start border-white/10 hover:bg-white/5 h-12 text-muted-foreground hover:text-red-500 hover:border-red-500/30 transition-all group"
+            >
+              <Printer className="w-4 h-4 mr-2 group-hover:text-red-500" />
+              Print Weekly Summary
+            </Button>
+            <Link href="/member/referral" className="w-full">
+              <Button variant="outline" className="w-full justify-start border-white/10 hover:bg-white/5 h-12 text-muted-foreground hover:text-red-500 hover:border-red-500/30 transition-all group">
+                <FileText className="w-4 h-4 mr-2 group-hover:text-red-500" />
+                Referrals Report
+              </Button>
+            </Link>
+            <Link href="/member/revenue" className="w-full">
+              <Button variant="outline" className="w-full justify-start border-white/10 hover:bg-white/5 h-12 text-muted-foreground hover:text-red-500 hover:border-red-500/30 transition-all group">
+                <ExternalLink className="w-4 h-4 mr-2 group-hover:text-red-500" />
+                My Activity Report
+              </Button>
+            </Link>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   );
 }

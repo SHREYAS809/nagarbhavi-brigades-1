@@ -6,11 +6,12 @@ import { api } from '@/lib/api';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { PerformanceChart } from '@/components/charts/performance-chart';
 import { RevenueByMemberChart } from '@/components/charts/revenue-by-member-chart';
-import { Users, Gift, TrendingUp, Calendar } from 'lucide-react';
+import { Users, Gift, TrendingUp, Calendar, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { mockRevenueByMember } from '@/lib/mockData'; // Keep charts mock if backend data not ready formatted
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,8 +21,12 @@ export default function AdminDashboard() {
         try {
           const dashboardData = await api.getDashboardData(user.token);
           setData(dashboardData);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Failed to fetch dashboard data", error);
+          if (error.message.includes('401')) {
+            logout();
+            window.location.href = '/login/admin'; // Force redirect to admin login
+          }
         } finally {
           setLoading(false);
         }
@@ -70,11 +75,21 @@ export default function AdminDashboard() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of platform metrics and member activity
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+          <p className="text-muted-foreground">
+            Overview of platform metrics and member activity
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => { logout(); window.location.href = '/login/admin'; }}
+          className="gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          Logout
+        </Button>
       </div>
 
       {/* Stats Grid */}

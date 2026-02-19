@@ -38,7 +38,7 @@ export default function MeetingsPage() {
       // We'd need to add user ID to participants list locally.
       setMeetings(meetings.map(m =>
         m._id === id
-          ? { ...m, participants: [...(m.participants || []), user?.id] }
+          ? { ...m, participants: [...(m.participants || []), { id: user?.id, name: user?.name, email: user?.email }] }
           : m
       ));
     } catch (error) {
@@ -47,7 +47,7 @@ export default function MeetingsPage() {
   };
 
   const isRegistered = (meeting: any) => {
-    return meeting.participants?.includes(user?.id);
+    return meeting.participants?.some((p: any) => p.id === user?.id);
   };
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading meetings...</div>;

@@ -88,7 +88,7 @@ export default function BroadcastPage() {
                 name="recipientGroup"
                 value={formData.recipientGroup}
                 onChange={handleChange}
-                className="glass-input w-full"
+                className="glass-input w-full text-foreground [&>option]:text-black"
               >
                 <option value="all">All Members (15 members)</option>
                 <option value="premium">Premium Members (8 members)</option>
