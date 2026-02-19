@@ -69,8 +69,10 @@ def add_referral(current_user):
     db.session.add(new_referral)
     db.session.commit()
     
-    # Send Email
-    if to_member.email:
+    # Send Email only if requested and recipient has email
+    send_notification = data.get('send_email', True) # Default to True if missing, or maybe False based on preference? User has checkbox, so respects that.
+    
+    if send_notification and to_member.email:
         send_email(
             "New Referral Received!",
             [to_member.email],

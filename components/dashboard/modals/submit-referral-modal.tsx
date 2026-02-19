@@ -74,7 +74,8 @@ export function SubmitReferralModal({
         email: formData.email,
         type: formData.type,
         heat: formData.heat,
-        comments: formData.comments
+        comments: formData.comments,
+        send_email: formData.sendEmail // Add this flag
       };
 
       const res = await api.createReferral(user?.token || '', payload);

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from backend.models import Revenue, User
 from backend.utils.extensions import db
 from backend.utils.auth import token_required, admin_required
+from backend.utils.email_service import send_email
 from sqlalchemy import or_
 import datetime
 
@@ -64,6 +65,24 @@ def add_revenue(current_user):
     db.session.add(new_revenue)
     db.session.commit()
     
+    # Send Thank You Email to the member who gave the referral/business
+    try:
+        recipient = User.query.get(member_id)
+        if recipient and recipient.email:
+            send_email(
+                subject=f"New Thank You Slip from {current_user.name}",
+                recipients=[recipient.email],
+                html_body=f"""
+                <h1>You received a Thank You Slip!</h1>
+                <p><strong>From:</strong> {current_user.name}</p>
+                <p><strong>Amount:</strong> ₹{amount}</p>
+                <p><strong>Notes:</strong> {data.get('notes', 'No notes')}</p>
+                <p>Great job generating business for the chapter!</p>
+                """
+            )
+    except Exception as e:
+        print(f"Failed to send Thank You email: {e}")
+
     return jsonify({'message': 'Revenue added', 'id': str(new_revenue.id)}), 201
 
 # Admin routes for updating/deleting revenue? 
