@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from backend.config.config import Config
-from backend.utils.extensions import mongo, bcrypt, mail
+from backend.utils.extensions import bcrypt, mail
 from backend.routes.auth_routes import auth_bp
 from backend.routes.referral_routes import referral_bp
 from backend.routes.revenue_routes import revenue_bp
@@ -18,7 +18,7 @@ def create_app():
 
     # Initialize Extensions
     # Initialize Extensions
-    mongo.init_app(app)
+    # mongo.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
     
