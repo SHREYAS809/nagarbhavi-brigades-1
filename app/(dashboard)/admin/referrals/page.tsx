@@ -87,7 +87,7 @@ export default function AdminReferralsPage() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="glass-input w-full"
+              className="glass-input w-full [&>option]:text-black"
             >
               <option value="">All Types</option>
               <option value="Tier 1">Tier 1</option>

@@ -112,7 +112,7 @@ export default function AdminMembersPage() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="glass-input md:w-48"
+            className="glass-input md:w-48 [&>option]:text-black"
           >
             <option value="">All Categories</option>
             {categories.map((cat: any) => (

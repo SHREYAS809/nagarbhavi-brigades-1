@@ -140,7 +140,7 @@ export function LoginForm({ restrictedRole }: LoginFormProps) {
 
         <div className="text-center text-sm text-muted-foreground border-t border-white/10 pt-4 space-y-2">
           {/* Registration disabled as per request */}
-          <p className="text-xs">© 2024 Nagarbhavi Brigades. All rights reserved.</p>
+          <p className="text-xs">© 2026 Nagarbhavi Brigades. All rights reserved.</p>
         </div>
       </div>
     </div>
