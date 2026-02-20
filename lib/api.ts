@@ -289,17 +289,31 @@ export const api = {
         const handleResponse = async (res: Response) => {
             if (!res.ok) {
                 const text = await res.text();
-                throw new Error(`API Error: ${res.status} ${text}`);
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error(`API Error: ${res.status} Unauthorized`);
+                }
+                console.error(`API Error: ${res.status} ${text}`);
+                return []; // Fallback empty array
             }
             return res.json();
         };
 
+        const safeFetch = (url: string) =>
+            fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(handleResponse)
+                .catch(e => {
+                    if (e.message && e.message.includes('401')) throw e;
+                    console.error(`Fetch failed for ${url}:`, e);
+                    return []; // Fallback empty array
+                });
+
         const [referrals, revenue, meetings, members] = await Promise.all([
-            fetch(`${API_URL}/referrals/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(handleResponse),
-            fetch(`${API_URL}/revenue/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(handleResponse),
-            fetch(`${API_URL}/meetings/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(handleResponse),
-            fetch(`${API_URL}/auth/users`, { headers: { 'Authorization': `Bearer ${token}` } }).then(handleResponse),
+            safeFetch(`${API_URL}/referrals/`),
+            safeFetch(`${API_URL}/revenue/`),
+            safeFetch(`${API_URL}/meetings/`),
+            safeFetch(`${API_URL}/auth/users`),
         ]);
+
         return { referrals, revenue, meetings, members };
     }
 };
