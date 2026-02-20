@@ -38,6 +38,17 @@ def create_app():
             upgrade(directory=migrations_dir)
         except Exception as e:
             print(f"Auto-upgrade failed: {e}")
+            
+        # BULLETPROOF FALLBACK: Violently force the column creation if migrate failed
+        try:
+            from sqlalchemy import text
+            # Check if column exists, if not, add it directly via SQL
+            db.session.execute(text("ALTER TABLE meeting ADD COLUMN IF NOT EXISTS organized_by INTEGER REFERENCES \"user\"(id)"))
+            db.session.commit()
+            print("Successfully verified/added organized_by column via raw SQL fallback.")
+        except Exception as e2:
+            db.session.rollback()
+            print(f"Raw SQL fallback failed: {e2}")
     
     CORS(app) # Enable CORS for all routes
 
