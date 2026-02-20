@@ -35,7 +35,7 @@ def create_app():
     with app.app_context():
         try:
             from flask_migrate import upgrade
-            upgrade()
+            upgrade(directory=migrations_dir)
         except Exception as e:
             print(f"Auto-upgrade failed: {e}")
     
