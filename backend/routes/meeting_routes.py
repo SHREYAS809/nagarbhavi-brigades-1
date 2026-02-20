@@ -43,42 +43,48 @@ def get_meetings(current_user):
 @token_required
 @admin_required
 def create_meeting(current_user):
-    data = request.get_json()
-    
-    # Safely cast organizer_id to int
-    organizer_id = data.get('organizer_id', current_user.id)
     try:
-        if organizer_id is not None:
-            organizer_id = int(organizer_id)
-    except (ValueError, TypeError):
-        organizer_id = current_user.id
+        data = request.get_json()
+        
+        # Safely cast organizer_id to int
+        organizer_id = data.get('organizer_id', current_user.id)
+        try:
+            if organizer_id is not None:
+                organizer_id = int(organizer_id)
+        except (ValueError, TypeError):
+            organizer_id = current_user.id
 
-    # VERY IMPORTANT FIX: If the frontend sends an old/cached organizer_id that was deleted 
-    # from the live PostgreSQL database, it will crash with a Foreign Key IntegrityError.
-    # Check if this user actually exists.
-    if organizer_id != current_user.id:
-        organizer_exists = User.query.get(organizer_id)
-        if not organizer_exists:
-            organizer_id = current_user.id # Fallback to the person making the request
+        # VERY IMPORTANT FIX: If the frontend sends an old/cached organizer_id that was deleted 
+        # from the live PostgreSQL database, it will crash with a Foreign Key IntegrityError.
+        # Check if this user actually exists.
+        if organizer_id != current_user.id:
+            organizer_exists = User.query.get(organizer_id)
+            if not organizer_exists:
+                organizer_id = current_user.id # Fallback to the person making the request
 
-    try:
-        fee = float(data.get('fee', 0.0))
-    except (ValueError, TypeError):
-        fee = 0.0
+        try:
+            fee = float(data.get('fee', 0.0))
+        except (ValueError, TypeError):
+            fee = 0.0
 
-    new_meeting = Meeting(
-        title=data.get('title'),
-        date=data.get('date'),
-        time=data.get('time'),
-        location=data.get('location'),
-        description=data.get('description'),
-        type=data.get('type', 'Chapter Meeting'),
-        fee=fee,
-        organized_by=organizer_id
-    )
-    db.session.add(new_meeting)
-    db.session.commit()
-    return jsonify({'message': 'Meeting scheduled', 'id': str(new_meeting.id)}), 201
+        new_meeting = Meeting(
+            title=data.get('title'),
+            date=data.get('date'),
+            time=data.get('time'),
+            location=data.get('location'),
+            description=data.get('description'),
+            type=data.get('type', 'Chapter Meeting'),
+            fee=fee,
+            organized_by=organizer_id
+        )
+        db.session.add(new_meeting)
+        db.session.commit()
+        return jsonify({'message': 'Meeting scheduled', 'id': str(new_meeting.id)}), 201
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error creating meeting: {error_trace}")
+        return jsonify({'message': 'Exception during meeting creation', 'error': str(e), 'trace': error_trace}), 500
 
 @meeting_bp.route('/<id>', methods=['PUT'])
 @token_required
