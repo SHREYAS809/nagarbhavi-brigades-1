@@ -51,7 +51,8 @@ def create_meeting(current_user):
         location=data.get('location'),
         description=data.get('description'),
         type=data.get('type', 'Chapter Meeting'),
-        fee=data.get('fee', 0.0)
+        fee=data.get('fee', 0.0),
+        organized_by=data.get('organizer_id', current_user.id)
     )
     db.session.add(new_meeting)
     db.session.commit()

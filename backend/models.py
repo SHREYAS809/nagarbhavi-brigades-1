@@ -67,6 +67,9 @@ class Meeting(db.Model):
     type = db.Column(db.String(50), default='Chapter Meeting')
     fee = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    organized_by = db.Column(db.Integer, db.ForeignKey('user.id')) # Organizer
+
+    organizer = db.relationship('User', backref=db.backref('meetings_organized', lazy=True))
 
 # Association Table for Meeting Attendees
 meeting_attendees = db.Table('meeting_attendees',
