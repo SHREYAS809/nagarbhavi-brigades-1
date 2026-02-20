@@ -22,9 +22,14 @@ def create_app():
     bcrypt.init_app(app)
     mail.init_app(app)
     
+    import os
     from backend.utils.extensions import db, migrate
     db.init_app(app)
-    migrate.init_app(app, db)
+    
+    # Render starts gunicorn in backend/wsgi.py which might mess up relative paths
+    # Set the exact path to the migrations folder at the root project level
+    migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'migrations'))
+    migrate.init_app(app, db, directory=migrations_dir)
     
     # Auto-upgrade the database
     with app.app_context():
