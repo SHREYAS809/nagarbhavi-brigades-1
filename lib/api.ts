@@ -149,7 +149,10 @@ export const api = {
             },
             body: JSON.stringify(data),
         });
-        if (!res.ok) throw new Error('Failed to create meeting');
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Failed to create meeting: ${res.status} ${errorText}`);
+        }
         return res.json();
     },
 

@@ -26,6 +26,14 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     
+    # Auto-upgrade the database
+    with app.app_context():
+        try:
+            from flask_migrate import upgrade
+            upgrade()
+        except Exception as e:
+            print(f"Auto-upgrade failed: {e}")
+    
     CORS(app) # Enable CORS for all routes
 
     # Register Blueprints
