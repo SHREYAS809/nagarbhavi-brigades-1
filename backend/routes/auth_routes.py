@@ -34,9 +34,6 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    with open('backend_debug.log', 'a') as f:
-        f.write(f"Login Attempt: {data.get('email')} | Password: {data.get('password')}\n")
-    
     user = User.query.filter_by(email=data['email']).first()
 
     if user and bcrypt.check_password_hash(user.password, data['password']):

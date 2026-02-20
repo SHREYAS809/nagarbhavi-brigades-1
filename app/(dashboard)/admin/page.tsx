@@ -66,6 +66,12 @@ export default function AdminDashboard() {
     { month: 'Dec', referrals: 48 },
   ];
 
+  // Helper
+  const getMemberName = (id: string) => {
+    const m = members.find((u: any) => u.id === id);
+    return m ? m.name : 'Unknown';
+  };
+
   // Calculate Revenue by Member from real data
   // revenue model from routes/revenue_routes.py: { amount, member_id, created_by, ... }
   // member_id is the one who GAVE the business (Referrer)
@@ -89,12 +95,6 @@ export default function AdminDashboard() {
     }))
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5); // Top 5 contributors
-
-  // Helper
-  const getMemberName = (id: string) => {
-    const m = members.find((u: any) => u.id === id);
-    return m ? m.name : 'Unknown';
-  };
 
   return (
     <div className="p-6 md:p-8 space-y-8">
