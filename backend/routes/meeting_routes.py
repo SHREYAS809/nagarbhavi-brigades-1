@@ -44,6 +44,19 @@ def get_meetings(current_user):
 @admin_required
 def create_meeting(current_user):
     data = request.get_json()
+    
+    organizer_id = data.get('organizer_id', current_user.id)
+    try:
+        if organizer_id is not None:
+            organizer_id = int(organizer_id)
+    except (ValueError, TypeError):
+        organizer_id = current_user.id
+
+    try:
+        fee = float(data.get('fee', 0.0))
+    except (ValueError, TypeError):
+        fee = 0.0
+
     new_meeting = Meeting(
         title=data.get('title'),
         date=data.get('date'),
@@ -51,8 +64,8 @@ def create_meeting(current_user):
         location=data.get('location'),
         description=data.get('description'),
         type=data.get('type', 'Chapter Meeting'),
-        fee=data.get('fee', 0.0),
-        organized_by=data.get('organizer_id', current_user.id)
+        fee=fee,
+        organized_by=organizer_id
     )
     db.session.add(new_meeting)
     db.session.commit()
