@@ -7,8 +7,9 @@ Flask-Mail==0.9.1
 dnspython==2.4.2
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.5
-SQLAlchemy==2.0.25
+SQLAlchemy==2.0.35
 gunicorn==21.2.0
 werkzeug==3.0.1
 email_validator==2.1.0.post1
 Flask-Login==0.6.3
+psycopg2-binary==2.9.9; sys_platform != "win32"
