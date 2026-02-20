@@ -45,12 +45,21 @@ def get_meetings(current_user):
 def create_meeting(current_user):
     data = request.get_json()
     
+    # Safely cast organizer_id to int
     organizer_id = data.get('organizer_id', current_user.id)
     try:
         if organizer_id is not None:
             organizer_id = int(organizer_id)
     except (ValueError, TypeError):
         organizer_id = current_user.id
+
+    # VERY IMPORTANT FIX: If the frontend sends an old/cached organizer_id that was deleted 
+    # from the live PostgreSQL database, it will crash with a Foreign Key IntegrityError.
+    # Check if this user actually exists.
+    if organizer_id != current_user.id:
+        organizer_exists = User.query.get(organizer_id)
+        if not organizer_exists:
+            organizer_id = current_user.id # Fallback to the person making the request
 
     try:
         fee = float(data.get('fee', 0.0))
