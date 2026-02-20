@@ -8,7 +8,7 @@ import { PerformanceChart } from '@/components/charts/performance-chart';
 import { RevenueByMemberChart } from '@/components/charts/revenue-by-member-chart';
 import { Users, Gift, TrendingUp, Calendar, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { mockRevenueByMember } from '@/lib/mockData'; // Keep charts mock if backend data not ready formatted
+// import { mockRevenueByMember } from '@/lib/mockData'; // Not needed anymore as we use real data
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -65,6 +65,30 @@ export default function AdminDashboard() {
     { month: 'Nov', referrals: 42 },
     { month: 'Dec', referrals: 48 },
   ];
+
+  // Calculate Revenue by Member from real data
+  // revenue model from routes/revenue_routes.py: { amount, member_id, created_by, ... }
+  // member_id is the one who GAVE the business (Referrer)
+  // created_by is the one who RECEIVED the business (Recipient)
+  // In "Revenue by Member", we usually show how much each member has EARNED (Recipient)
+  // or how much they have GIVEN (Referrer). 
+  // Let's show Revenue Earned (created_by) per member to match "Thank You For Closed Business" logic.
+
+  const revenueByMemberMap = new Map<string, number>();
+  revenue.forEach((rev: any) => {
+    const memberId = rev.created_by; // The one who received the business/money
+    const amount = rev.amount || 0;
+    revenueByMemberMap.set(memberId, (revenueByMemberMap.get(memberId) || 0) + amount);
+  });
+
+  const revenueByMemberData = Array.from(revenueByMemberMap.entries())
+    .map(([memberId, totalRevenue]) => ({
+      memberId,
+      member: getMemberName(memberId),
+      revenue: totalRevenue
+    }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5); // Top 5 contributors
 
   // Helper
   const getMemberName = (id: string) => {
@@ -127,7 +151,7 @@ export default function AdminDashboard() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PerformanceChart data={adminPerformanceData} />
-        <RevenueByMemberChart data={mockRevenueByMember} />
+        <RevenueByMemberChart data={revenueByMemberData.length > 0 ? revenueByMemberData : []} />
       </div>
 
       {/* Recent Activity */}
