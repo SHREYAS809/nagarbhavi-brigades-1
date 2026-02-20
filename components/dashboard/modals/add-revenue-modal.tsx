@@ -34,7 +34,7 @@ export function AddRevenueModal({
         member_id: '',
         amount: '',
         source: 'Referral',
-        month: new Date().toLocaleString('default', { month: 'long' }),
+        date: new Date().toISOString().split('T')[0],
         notes: '',
     });
     const [isLoading, setIsLoading] = useState(false);
@@ -51,15 +51,18 @@ export function AddRevenueModal({
 
         try {
             const payload = {
-                ...formData,
-                amount: parseFloat(formData.amount)
+                member_id: parseInt(formData.member_id),
+                amount: parseFloat(formData.amount),
+                type: formData.source, // Backend expects 'type'
+                date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+                notes: formData.notes
             };
 
             await api.addRevenue(user?.token || '', payload);
 
             toast({
                 title: 'Revenue Added',
-                description: `Revenue recorded successfully!`,
+                description: `Revenue of ₹${payload.amount} recorded successfully!`,
             });
 
             onOpenChange(false);
@@ -70,7 +73,7 @@ export function AddRevenueModal({
                 member_id: '',
                 amount: '',
                 source: 'Referral',
-                month: new Date().toLocaleString('default', { month: 'long' }),
+                date: new Date().toISOString().split('T')[0],
                 notes: '',
             });
 
@@ -169,6 +172,22 @@ export function AddRevenueModal({
                             <option value="Event">Event</option>
                             <option value="Other">Other</option>
                         </select>
+                    </div>
+
+                    {/* Date */}
+                    <div className="space-y-2">
+                        <Label htmlFor="date" className="text-sm font-medium">
+                            Date
+                        </Label>
+                        <Input
+                            id="date"
+                            name="date"
+                            type="date"
+                            value={formData.date}
+                            onChange={handleChange}
+                            className="glass-input"
+                            required
+                        />
                     </div>
 
                     {/* Notes */}

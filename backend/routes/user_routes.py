@@ -40,7 +40,7 @@ def update_user(current_user, id):
     # Allow partial updates
     allowed_fields = ['name', 'phone', 'business_category', 'chapter', 'photo', 'bio', 'membership_plan']
     if current_user.role == 'admin':
-        allowed_fields.append('role')
+        allowed_fields.extend(['role', 'membership_tier', 'membership_status'])
         
     for key, value in data.items():
         if key in allowed_fields:
