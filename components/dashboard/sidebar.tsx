@@ -42,7 +42,7 @@ export function Sidebar() {
   const memberLinks = [
     { href: '/member', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/member/submit', label: 'Give Referral', icon: Send },
-    { href: '/member/thank-you', label: 'Thank You Slip', icon: CheckCircle }, // TYFCB
+    { href: '/member/thank-you', label: 'Say Thank You', icon: CheckCircle }, // TYFCB
     { href: '/member/referral', label: 'Referrals Given', icon: Gift },
     { href: '/member/referrals-received', label: 'Referrals Received', icon: CheckSquare },
     { href: '/member/meetings', label: 'Meetings', icon: Calendar },

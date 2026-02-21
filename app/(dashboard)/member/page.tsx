@@ -9,20 +9,27 @@ import { Wallet, Briefcase, GraduationCap, Coffee, UserCheck, Inbox, Send, Exter
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { EngagementBadge } from '@/components/dashboard/engagement-badge';
+import { SearchBar } from '@/components/dashboard/search-bar';
 import Link from 'next/link';
 
 export default function MemberDashboard() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const [data, setData] = useState<any>(null);
+  const [engagement, setEngagement] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       if (user?.token) {
         try {
-          const dashboardData = await api.getDashboardData(user.token);
+          const [dashboardData, engagementData] = await Promise.all([
+            api.getDashboardData(user.token),
+            api.getEngagementStats(user.token)
+          ]);
           setData(dashboardData);
+          setEngagement(engagementData.find((m: any) => m.id === user.id));
         } catch (error: any) {
           console.error("Failed to fetch dashboard data", error);
           if (error.message.includes('401')) {
@@ -70,15 +77,13 @@ export default function MemberDashboard() {
     <div className="p-4 md:p-8 space-y-6 max-w-[1600px] mx-auto">
       {/* Top Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-        <div>
+        <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-red-600 tracking-tight">Hello {user?.name?.split(' ')[0] || 'Member'}</h1>
+          {engagement && <EngagementBadge status={engagement.status} className="h-6" />}
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search..." className="pl-9 w-64 glass-input bg-white/5 border-white/10" />
-          </div>
+          <SearchBar />
 
           <div className="bg-white/5 border border-white/10 px-4 py-2 rounded text-sm font-medium text-foreground">
             Nagarbhavi Brigades

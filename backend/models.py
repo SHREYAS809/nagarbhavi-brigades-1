@@ -9,6 +9,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(200), nullable=False) # Hashed password
     role = db.Column(db.String(20), default='member') # 'member' or 'admin'
     business_category = db.Column(db.String(100))
+    business_name = db.Column(db.String(100))
+    services_offered = db.Column(db.Text)
     phone = db.Column(db.String(20))
     chapter = db.Column(db.String(100), default='Nagarbhavi Brigades')
     membership_plan = db.Column(db.String(50), default='12 Months') # 'Lifetime', '6 Months', '12 Months'
@@ -33,10 +35,9 @@ class Referral(db.Model):
     contact_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120))
     phone = db.Column(db.String(20))
-    referral_type = db.Column(db.String(20)) # Inside / Outside
-    heat = db.Column(db.String(20)) # Hot, Warm, Cold
+    referral_type = db.Column(db.String(20)) # Self / Others
     comments = db.Column(db.Text)
-    status = db.Column(db.String(50), default='New') # New, Contacted, Closed, etc.
+    status = db.Column(db.String(50), default='Open') # Open / Closed
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     sender = db.relationship('User', foreign_keys=[from_member_id], back_populates='referrals_given')
@@ -50,6 +51,8 @@ class Revenue(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Who received the money and is recording it (Recipient)
     referral_id = db.Column(db.Integer, db.ForeignKey('referral.id'), nullable=True) # Optional link to a specific referral
     notes = db.Column(db.Text)
+    appreciation_message = db.Column(db.Text)
+    appreciation_reason = db.Column(db.Text)
     date = db.Column(db.String(20)) # Stored as string or Date object
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -132,3 +135,15 @@ class LearningCredit(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     member = db.relationship('User', foreign_keys=[member_id], backref=db.backref('learning_credits', lazy=True))
+
+class OneToOne(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Initiator
+    with_member_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Partner
+    date = db.Column(db.String(20), default=datetime.utcnow().strftime('%Y-%m-%d'))
+    location = db.Column(db.String(200))
+    topics_discussed = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    initiator = db.relationship('User', foreign_keys=[member_id], backref=db.backref('one_to_ones_initiated', lazy=True))
+    partner = db.relationship('User', foreign_keys=[with_member_id], backref=db.backref('one_to_ones_received', lazy=True))

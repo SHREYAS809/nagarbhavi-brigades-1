@@ -11,6 +11,8 @@ from backend.routes.notification_routes import notification_bp
 from backend.routes.user_routes import user_bp
 from backend.routes.guest_routes import guest_bp
 from backend.routes.learning_routes import learning_bp
+from backend.routes.analytics_routes import analytics_bp
+from backend.routes.search_routes import search_bp
 
 def create_app():
     app = Flask(__name__)
@@ -62,6 +64,8 @@ def create_app():
     app.register_blueprint(user_bp, url_prefix='/api/users')
     app.register_blueprint(guest_bp, url_prefix='/api/guests')
     app.register_blueprint(learning_bp, url_prefix='/api/learning')
+    app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+    app.register_blueprint(search_bp, url_prefix='/api/search')
 
     @app.route('/', methods=['GET'])
     def index():

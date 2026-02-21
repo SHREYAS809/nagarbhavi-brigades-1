@@ -33,6 +33,8 @@ export function RecordRevenueModal({
     const { toast } = useToast();
     const [amount, setAmount] = useState('');
     const [notes, setNotes] = useState('');
+    const [appreciationMessage, setAppreciationMessage] = useState('');
+    const [appreciationReason, setAppreciationReason] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -49,7 +51,9 @@ export function RecordRevenueModal({
                 member_id: referral.from_member,
                 amount: parseFloat(amount),
                 source: 'Referral',
-                notes: `Revenue from referral: ${referral.contact_name}. ${notes}`
+                notes: notes,
+                appreciation_message: appreciationMessage,
+                appreciation_reason: appreciationReason
             });
 
             // 2. Close the Referral
@@ -114,8 +118,42 @@ export function RecordRevenueModal({
                     </div>
 
                     <div className="space-y-2">
+                        <Label htmlFor="reason" className="text-sm font-medium">
+                            Reason for Appreciation
+                        </Label>
+                        <select
+                            id="reason"
+                            value={appreciationReason}
+                            onChange={(e) => setAppreciationReason(e.target.value)}
+                            className="glass-input w-full text-foreground [&>option]:text-black"
+                            required
+                        >
+                            <option value="">Select a reason</option>
+                            <option>Exemplary Service</option>
+                            <option>Quick Response</option>
+                            <option>High Quality Lead</option>
+                            <option>Successful Conversion</option>
+                            <option>Professionalism</option>
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="message" className="text-sm font-medium">
+                            Appreciation Message
+                        </Label>
+                        <textarea
+                            id="message"
+                            placeholder="Write a short thank you message..."
+                            value={appreciationMessage}
+                            onChange={(e) => setAppreciationMessage(e.target.value)}
+                            className="glass-input w-full min-h-[80px] p-3 resize-none"
+                            required
+                        />
+                    </div>
+
+                    <div className="space-y-2">
                         <Label htmlFor="notes" className="text-sm font-medium">
-                            Notes (Optional)
+                            Internal Notes (Optional)
                         </Label>
                         <div className="relative">
                             <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />

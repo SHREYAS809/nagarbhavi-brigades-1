@@ -15,6 +15,7 @@ import {
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/authContext';
 import { Mail, Phone, MessageSquare, Send } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SubmitReferralModalProps {
   open: boolean;
@@ -37,8 +38,7 @@ export function SubmitReferralModal({
   const [formData, setFormData] = useState({
     toMemberId: '',
     referralName: '',
-    type: 'Tier 1' as const,
-    heat: 'Hot' as const,
+    referral_type: 'Others' as 'Self' | 'Others',
     phone: '',
     email: '',
     comments: '',
@@ -72,10 +72,9 @@ export function SubmitReferralModal({
         contact_name: formData.referralName,
         phone: formData.phone,
         email: formData.email,
-        type: formData.type,
-        heat: formData.heat,
+        referral_type: formData.referral_type,
         comments: formData.comments,
-        send_email: formData.sendEmail // Add this flag
+        send_email: formData.sendEmail
       };
 
       const res = await api.createReferral(user?.token || '', payload);
@@ -93,8 +92,7 @@ export function SubmitReferralModal({
       setFormData({
         toMemberId: '',
         referralName: '',
-        type: 'Tier 1',
-        heat: 'Hot',
+        referral_type: 'Others',
         phone: '',
         email: '',
         comments: '',
@@ -206,41 +204,40 @@ export function SubmitReferralModal({
             />
           </div>
 
-          {/* Type & Heat Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type" className="text-sm font-medium">
-                Type
-              </Label>
-              <select
-                id="type"
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                className="glass-input w-full text-foreground [&>option]:text-black"
+          {/* Referral Type */}
+          <div className="space-y-2">
+            <Label htmlFor="referral_type" className="text-sm font-medium">
+              Referral Type
+            </Label>
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                type="button"
+                variant={formData.referral_type === 'Self' ? 'default' : 'outline'}
+                className={cn(
+                  "w-full h-10 font-semibold transition-all",
+                  formData.referral_type === 'Self' ? "bg-primary text-black" : "border-white/10 text-muted-foreground"
+                )}
+                onClick={() => setFormData(p => ({ ...p, referral_type: 'Self' }))}
               >
-                <option>Tier 1</option>
-                <option>Tier 2</option>
-                <option>Tier 3</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="heat" className="text-sm font-medium">
-                Heat
-              </Label>
-              <select
-                id="heat"
-                name="heat"
-                value={formData.heat}
-                onChange={handleChange}
-                className="glass-input w-full text-foreground [&>option]:text-black"
+                Self
+              </Button>
+              <Button
+                type="button"
+                variant={formData.referral_type === 'Others' ? 'default' : 'outline'}
+                className={cn(
+                  "w-full h-10 font-semibold transition-all",
+                  formData.referral_type === 'Others' ? "bg-primary text-black" : "border-white/10 text-muted-foreground"
+                )}
+                onClick={() => setFormData(p => ({ ...p, referral_type: 'Others' }))}
               >
-                <option>Hot</option>
-                <option>Warm</option>
-                <option>Cold</option>
-              </select>
+                Others
+              </Button>
             </div>
+            <p className="text-[10px] text-muted-foreground">
+              {formData.referral_type === 'Self'
+                ? 'Referring your own company to another member'
+                : 'Referring an external contact to a member'}
+            </p>
           </div>
 
           {/* Phone */}

@@ -19,7 +19,9 @@ export default function ProfilePage() {
     name: '',
     email: '',
     phone: '',
+    businessName: '',
     businessCategory: '',
+    servicesOffered: '',
     membershipPlan: '',
     bio: '',
     photo: '',
@@ -56,7 +58,9 @@ export default function ProfilePage() {
               name: me.name || '',
               email: me.email || '',
               phone: me.phone || '',
-              businessCategory: me.business_category || '', // Backend uses underscore
+              businessName: me.business_name || '',
+              businessCategory: me.business_category || '',
+              servicesOffered: me.services_offered || '',
               membershipPlan: me.membership_plan || '12 Months',
               bio: me.bio || 'Passionate about growing the Nagarbhavi Brigades community',
               photo: me.photo || '',
@@ -104,7 +108,9 @@ export default function ProfilePage() {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
+        business_name: formData.businessName,
         business_category: formData.businessCategory,
+        services_offered: formData.servicesOffered,
         membership_plan: formData.membershipPlan,
         bio: formData.bio,
         photo: formData.photo,
@@ -281,6 +287,24 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* Business Name */}
+              <div className="space-y-2">
+                <Label htmlFor="businessName" className="text-sm font-medium">
+                  Business Name
+                </Label>
+                <div className="relative">
+                  <Briefcase className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="businessName"
+                    name="businessName"
+                    value={formData.businessName}
+                    onChange={handleFormChange}
+                    className="glass-input pl-10"
+                    placeholder="E.g. Nagarbhavi Solutions"
+                  />
+                </div>
+              </div>
+
               {/* Business Category */}
               <div className="space-y-2">
                 <Label htmlFor="category" className="text-sm font-medium">
@@ -294,8 +318,25 @@ export default function ProfilePage() {
                     value={formData.businessCategory}
                     onChange={handleFormChange}
                     className="glass-input pl-10"
+                    placeholder="E.g. IT Services"
                   />
                 </div>
+              </div>
+
+              {/* Services Offered */}
+              <div className="space-y-2">
+                <Label htmlFor="servicesOffered" className="text-sm font-medium">
+                  Services Offered
+                </Label>
+                <textarea
+                  id="servicesOffered"
+                  name="servicesOffered"
+                  value={formData.servicesOffered}
+                  onChange={handleFormChange}
+                  rows={2}
+                  className="glass-input resize-none w-full p-2"
+                  placeholder="List your core products or services..."
+                />
               </div>
 
               {/* Bio */}

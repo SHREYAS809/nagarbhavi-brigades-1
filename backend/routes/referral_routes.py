@@ -30,7 +30,6 @@ def get_referrals(current_user):
             'email': r.email,
             'phone': r.phone,
             'referral_type': r.referral_type,
-            'heat': r.heat,
             'comments': r.comments,
             'status': r.status,
             'created_at': r.created_at.isoformat() if r.created_at else None
@@ -60,10 +59,9 @@ def add_referral(current_user):
         contact_name=data.get('contact_name'),
         email=data.get('email'),
         phone=data.get('phone'),
-        referral_type=data.get('type'),
-        heat=data.get('heat'),
+        referral_type=data.get('referral_type') or data.get('type'), # Self / Others
         comments=data.get('comments'),
-        status='New'
+        status='Open'
     )
     
     db.session.add(new_referral)

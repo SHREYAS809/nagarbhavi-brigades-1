@@ -59,6 +59,8 @@ def add_revenue(current_user):
         created_by=current_user.id, # Current user RECEIVED the business
         referral_id=data.get('referral_id'), # Optional
         notes=data.get('notes'),
+        appreciation_message=data.get('appreciation_message'),
+        appreciation_reason=data.get('appreciation_reason'),
         date=data.get('date', datetime.datetime.utcnow().strftime('%Y-%m-%d'))
     )
     

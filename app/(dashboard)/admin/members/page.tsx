@@ -10,11 +10,13 @@ import { Users, Edit2, Trash2, Plus, Search } from 'lucide-react';
 
 import { EditMemberModal } from '@/components/dashboard/modals/edit-member-modal';
 import { AddMemberModal } from '@/components/dashboard/modals/add-member-modal';
+import { EngagementBadge } from '@/components/dashboard/engagement-badge';
 
 export default function AdminMembersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [members, setMembers] = useState<any[]>([]);
+  const [engagement, setEngagement] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -31,8 +33,12 @@ export default function AdminMembersPage() {
   const fetchMembers = async () => {
     if (!user?.token) return;
     try {
-      const data = await api.getUsers(user.token);
-      setMembers(data);
+      const [membersData, engagementData] = await Promise.all([
+        api.getUsers(user.token),
+        api.getEngagementStats(user.token)
+      ]);
+      setMembers(membersData);
+      setEngagement(engagementData);
     } catch (error) {
       console.error("Failed to fetch members", error);
       toast({
@@ -132,8 +138,16 @@ export default function AdminMembersPage() {
             <div key={member._id} className="glass-card-hover p-6 space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-                  <Users className="w-6 h-6 text-primary-foreground" />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                    <Users className="w-6 h-6 text-primary-foreground" />
+                  </div>
+                  {engagement.find(e => e.id === member._id || e.id === member.id) && (
+                    <EngagementBadge
+                      status={engagement.find(e => e.id === member._id || e.id === member.id).status}
+                      className="text-[8px] px-1 py-0"
+                    />
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <button

@@ -198,6 +198,32 @@ export const api = {
         return res.json();
     },
 
+    // Analytics
+    getAnalytics: async (token: string, filter: string = '6m'): Promise<any> => {
+        const res = await fetch(`${API_URL}/analytics/?filter=${filter}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch analytics');
+        return res.json();
+    },
+
+    getEngagementStats: async (token: string): Promise<any> => {
+        const res = await fetch(`${API_URL}/analytics/engagement`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch engagement stats');
+        return res.json();
+    },
+
+    // Search
+    search: async (token: string, query: string): Promise<any> => {
+        const res = await fetch(`${API_URL}/search/?q=${query}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Search failed');
+        return res.json();
+    },
+
     // Notifications
     getNotifications: async (token: string): Promise<any> => {
         const res = await fetch(`${API_URL}/notifications/`, {
