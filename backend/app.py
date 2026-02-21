@@ -60,6 +60,35 @@ def create_app():
             # Add missing columns to 'meeting' table
             db.session.execute(text("ALTER TABLE meeting ADD COLUMN IF NOT EXISTS organized_by INTEGER REFERENCES \"user\"(id)"))
             
+            # Create missing tables if they don't exist
+            db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS one_to_one (
+                    id SERIAL PRIMARY KEY,
+                    member_id INTEGER NOT NULL REFERENCES \"user\"(id),
+                    with_member_id INTEGER NOT NULL REFERENCES \"user\"(id),
+                    date VARCHAR(20),
+                    location VARCHAR(200),
+                    topics_discussed TEXT,
+                    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            
+            db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS meeting_attendees (
+                    user_id INTEGER NOT NULL REFERENCES \"user\"(id),
+                    meeting_id INTEGER NOT NULL REFERENCES meeting(id),
+                    PRIMARY KEY (user_id, meeting_id)
+                )
+            """))
+            
+            db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS event_attendees (
+                    user_id INTEGER NOT NULL REFERENCES \"user\"(id),
+                    event_id INTEGER NOT NULL REFERENCES event(id),
+                    PRIMARY KEY (user_id, event_id)
+                )
+            """))
+            
             db.session.commit()
             print("Successfully verified/added all missing columns via raw SQL fallback.")
         except Exception as e2:

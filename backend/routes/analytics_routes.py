@@ -92,7 +92,7 @@ def get_engagement_stats(current_user):
         # Points: Meeting=2, Referral=2, Event=1, OneToOne=3
         
         points = 0
-        points += u.meetings.count() * 2
+        points += len(u.meetings) * 2
         # Use simple length if dynamic is not set or use query
         # But User.meetings is relationship
         # referrals_given = len(u.referrals_given)
