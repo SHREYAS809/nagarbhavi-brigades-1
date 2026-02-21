@@ -44,10 +44,19 @@ def create_app():
         # BULLETPROOF FALLBACK: Violently force the column creation if migrate failed
         try:
             from sqlalchemy import text
-            # Check if column exists, if not, add it directly via SQL
+            # Add missing columns to 'user' table
+            db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS business_name VARCHAR(100)"))
+            db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS services_offered TEXT"))
+            
+            # Add missing columns to 'revenue' table
+            db.session.execute(text("ALTER TABLE revenue ADD COLUMN IF NOT EXISTS appreciation_message TEXT"))
+            db.session.execute(text("ALTER TABLE revenue ADD COLUMN IF NOT EXISTS appreciation_reason TEXT"))
+            
+            # Add missing columns to 'meeting' table
             db.session.execute(text("ALTER TABLE meeting ADD COLUMN IF NOT EXISTS organized_by INTEGER REFERENCES \"user\"(id)"))
+            
             db.session.commit()
-            print("Successfully verified/added organized_by column via raw SQL fallback.")
+            print("Successfully verified/added all missing columns via raw SQL fallback.")
         except Exception as e2:
             db.session.rollback()
             print(f"Raw SQL fallback failed: {e2}")
