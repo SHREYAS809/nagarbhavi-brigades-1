@@ -34,31 +34,40 @@ def register():
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    email = data['email'].strip().lower()
-    user = User.query.filter_by(email=email).first()
+    try:
+        data = request.get_json()
+        if not data or 'email' not in data or 'password' not in data:
+            return jsonify({'message': 'Missing email or password'}), 400
+            
+        email = data['email'].strip().lower()
+        user = User.query.filter_by(email=email).first()
 
-    if user:
-        if bcrypt.check_password_hash(user.password, data['password']):
-            token = jwt.encode({
-                'user_id': str(user.id),
-                'role': user.role,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-            }, current_app.config['SECRET_KEY'], algorithm="HS256")
+        if user:
+            if bcrypt.check_password_hash(user.password, data['password']):
+                token = jwt.encode({
+                    'user_id': str(user.id),
+                    'role': user.role,
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+                }, current_app.config['SECRET_KEY'], algorithm="HS256")
 
-            return jsonify({
-                'token': token,
-                'role': user.role,
-                'name': user.name,
-                'id': str(user.id),
-                '_id': str(user.id) # Frontend compatibility
-            }), 200
+                return jsonify({
+                    'token': token,
+                    'role': user.role,
+                    'name': user.name,
+                    'id': str(user.id),
+                    '_id': str(user.id) # Frontend compatibility
+                }), 200
+            else:
+                print(f"Login failed: Password mismatch for user {email}")
         else:
-            print(f"Login failed: Password mismatch for user {data['email']}")
-    else:
-        print(f"Login failed: User {data['email']} not found")
+            print(f"Login failed: User {email} not found")
 
-    return jsonify({'message': 'Invalid credentials!'}), 401
+        return jsonify({'message': 'Invalid credentials!'}), 401
+    except Exception as e:
+        import traceback
+        error_msg = f"INTERNAL ERROR: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        return jsonify({'message': 'Internal Server Error', 'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 @auth_bp.route('/users', methods=['GET'])
 @token_required
