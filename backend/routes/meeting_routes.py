@@ -43,6 +43,8 @@ def get_meetings(current_user):
             'location': m.location,
             'description': m.description,
             'type': m.type,
+            'meeting_mode': m.meeting_mode,
+            'meet_link': m.meet_link,
             'fee': m.fee,
             'attendee_count': m.attendees.count(),
             'participants': participants # Added list of participants
@@ -84,6 +86,8 @@ def create_meeting(current_user):
             location=data.get('location'),
             description=data.get('description'),
             type=data.get('type', 'Chapter Meeting'),
+            meeting_mode=data.get('meeting_mode', 'Offline'),
+            meet_link=data.get('meet_link'),
             fee=fee,
             organized_by=organizer_id
         )

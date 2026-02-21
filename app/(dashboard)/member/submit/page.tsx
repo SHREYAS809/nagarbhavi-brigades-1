@@ -3,49 +3,48 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { api } from '@/lib/api';
-import { SubmitReferralModal } from '@/components/dashboard/modals/submit-referral-modal'; // Ensure path is correct
-import { Users, Search, Filter } from 'lucide-react';
+import { SubmitReferralModal } from '@/components/dashboard/modals/submit-referral-modal';
+import { MemberDetailsModal } from '@/components/dashboard/modals/member-details-modal';
+import { FilterBar } from '@/components/dashboard/filter-bar';
+import { Users, Search, Filter, Eye, Star, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 export default function SubmitReferralPage() {
     const { user } = useAuth();
     const [members, setMembers] = useState<any[]>([]);
-    const [filteredMembers, setFilteredMembers] = useState<any[]>([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+    const [selectedMember, setSelectedMember] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState({ search: '', category: '' });
 
     useEffect(() => {
-        if (user?.token) {
-            setLoading(true);
-            api.getUsers(user.token)
-                .then(data => {
+        async function fetchData() {
+            if (user?.token) {
+                try {
+                    const data = await api.getUsers(user.token, filters);
                     setMembers(data);
-                    setFilteredMembers(data);
-                })
-                .catch(console.error)
-                .finally(() => setLoading(false));
+                } catch (error) {
+                    console.error("Failed to fetch members", error);
+                } finally {
+                    setLoading(false);
+                }
+            }
         }
-    }, [user]);
+        fetchData();
+    }, [user, filters]);
 
-    useEffect(() => {
-        if (searchQuery) {
-            const lower = searchQuery.toLowerCase();
-            setFilteredMembers(members.filter(m =>
-                m.name.toLowerCase().includes(lower) ||
-                m.email.toLowerCase().includes(lower) ||
-                m.business_category?.toLowerCase().includes(lower)
-            ));
-        } else {
-            setFilteredMembers(members);
-        }
-    }, [searchQuery, members]);
-
-    const handleMemberSelect = (id: string) => {
-        setSelectedMemberId(id);
+    const handleMemberSelect = (member: any) => {
+        setSelectedMember(member);
         setIsModalOpen(true);
+    };
+
+    const handleViewDetails = (e: React.MouseEvent, member: any) => {
+        e.stopPropagation();
+        setSelectedMember(member);
+        setIsDetailsOpen(true);
     };
 
     const handleSuccess = (referralId: string) => {
@@ -65,43 +64,53 @@ export default function SubmitReferralPage() {
                 </p>
             </div>
 
-            {/* Search/Filter Bar */}
-            <div className="flex gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search members by name or category..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 glass-input"
-                    />
-                </div>
-                {/* <Button variant="outline" className="glass-button"><Filter className="w-4 h-4 mr-2"/> Filter</Button> */}
-            </div>
+            {/* Filter Bar */}
+            <FilterBar onFilterChange={setFilters} placeholder="Search members by name or category..." />
 
-            {/* Members Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMembers
-                    .filter(m => m._id !== user?.id && m.role !== 'admin') // Don't show self or admins
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {members
+                    .filter(m => String(m._id || m.id) !== String(user?.id) && m.role !== 'admin')
                     .map(member => (
-                        <div key={member._id} className="glass-card p-6 flex flex-col gap-4 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => handleMemberSelect(member._id)}>
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                                        {member.name.charAt(0)}
+                        <div
+                            key={member._id || member.id}
+                            className="glass-card group overflow-hidden border-white/10 hover:border-gold/30 transition-all duration-300 flex flex-col"
+                            onClick={() => handleMemberSelect(member)}
+                        >
+                            <div className="p-6">
+                                <div className="flex justify-between items-start mb-4">
+                                    <Avatar className="w-16 h-16 border-2 border-gold/20 p-1 bg-black/40 shadow-xl group-hover:scale-105 transition-transform duration-300">
+                                        <AvatarImage src={member.photo} className="rounded-full object-cover" />
+                                        <AvatarFallback className="text-xl bg-gold/10 text-gold">{member.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-8 w-8 text-muted-foreground hover:text-gold hover:bg-gold/10 rounded-full transition-colors"
+                                        onClick={(e) => handleViewDetails(e, member)}
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                    </Button>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-bold text-white group-hover:text-gold transition-colors">{member.name}</h3>
+                                    <p className="text-sm text-gold/80 font-medium">{member.business_category || 'Business Owner'}</p>
+                                </div>
+
+                                <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <MapPin className="w-3 h-3 text-gold/50" />
+                                        <span>Bangalore Hub</span>
                                     </div>
-                                    <div>
-                                        <h3 className="font-semibold text-foreground">{member.name}</h3>
-                                        <p className="text-xs text-muted-foreground">{member.business_category || 'Member'}</p>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <Star className="w-3 h-3 text-gold/50" />
+                                        <span>Active Member</span>
                                     </div>
                                 </div>
-                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                    <Users className="w-4 h-4" />
-                                </Button>
                             </div>
 
-                            <div className="mt-auto">
-                                <Button className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20">
+                            <div className="mt-auto p-4 bg-white/[0.02] border-t border-white/5">
+                                <Button className="w-full bg-gold/10 hover:bg-gold text-gold hover:text-black font-bold uppercase tracking-wider text-xs border border-gold/20 transition-all duration-300">
                                     Give Referral
                                 </Button>
                             </div>
@@ -135,7 +144,13 @@ export default function SubmitReferralPage() {
                 onOpenChange={setIsModalOpen}
                 onSuccess={handleSuccess}
                 currentMemberId={user?.id || ''}
-                selectedMemberId={selectedMemberId} // Pass selected member
+                selectedMemberId={selectedMember?.id || selectedMember?._id}
+            />
+
+            <MemberDetailsModal
+                open={isDetailsOpen}
+                onOpenChange={setIsDetailsOpen}
+                member={selectedMember}
             />
         </div>
     );

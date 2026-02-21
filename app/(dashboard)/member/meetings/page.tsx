@@ -4,20 +4,29 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Clock, Users, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, CheckCircle, Video, Globe, Home, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { FilterBar } from '@/components/dashboard/filter-bar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 export default function MeetingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [meetings, setMeetings] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ search: '', category: '' });
 
   const fetchData = async () => {
     if (user?.token) {
       try {
-        const mtgs = await api.getMeetings(user.token);
+        const [mtgs, usrs] = await Promise.all([
+          api.getMeetings(user.token, filters),
+          api.getUsers(user.token)
+        ]);
         setMeetings(mtgs);
+        setMembers(usrs);
       } catch (error) {
         console.error("Failed to fetch meetings", error);
       } finally {
@@ -28,7 +37,7 @@ export default function MeetingsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [user, filters]);
 
   const handleRegister = async (id: string) => {
     try {
@@ -47,78 +56,115 @@ export default function MeetingsPage() {
   };
 
   const isRegistered = (meeting: any) => {
-    return meeting.participants?.some((p: any) => p.id === user?.id);
+    return meeting.participants?.some((p: any) => String(p.id || p._id) === String(user?.id));
   };
+
+  const getMember = (id: string) => members.find(m => String(m.id || m._id) === String(id));
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading meetings...</div>;
 
   return (
     <div className="p-6 md:p-8 space-y-8">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Meetings & Events</h1>
+          <h1 className="text-3xl font-bold gold-text mb-2">Chapter Meetings</h1>
           <p className="text-muted-foreground">
-            Upcoming networking meetings and events
+            Networking events, workshops, and weekly brigade meetings.
           </p>
         </div>
-        {/* Member can't create, only view/register */}
       </div>
+
+      <FilterBar onFilterChange={setFilters} placeholder="Filter meetings..." />
 
       {/* Meetings Grid */}
       {meetings.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {meetings.map((meeting) => (
-            <div key={meeting._id} className="glass-card-hover p-6 space-y-4">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-foreground mb-1">{meeting.title}</h3>
-                  <p className="text-sm text-muted-foreground">{meeting.description}</p>
-                </div>
-              </div>
+            <div key={meeting._id || meeting.id} className="glass-card-hover border-white/10 overflow-hidden flex flex-col group">
+              <div className="p-6 space-y-4">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="outline" className={`text-[10px] uppercase font-bold px-2 py-0.5 ${meeting.meeting_mode === 'Online' ? 'border-blue-500/50 text-blue-400 bg-blue-500/5' :
+                          meeting.meeting_mode === 'Hybrid' ? 'border-purple-500/50 text-purple-400 bg-purple-500/5' :
+                            'border-orange-500/50 text-orange-400 bg-orange-500/5'
+                        }`}>
+                        {meeting.meeting_mode || 'In-Person'}
+                      </Badge>
+                      {meeting.meeting_mode !== 'In-Person' && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                      )}
+                    </div>
+                    <h3 className="text-xl font-bold text-white group-hover:text-gold transition-colors">{meeting.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{meeting.description || 'No description provided.'}</p>
+                  </div>
 
-              {/* Meeting Details */}
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  {meeting.date_time ? new Date(meeting.date_time).toLocaleDateString() : 'TBD'}
+                  <div className="flex flex-col items-center">
+                    <Avatar className="w-12 h-12 border-2 border-white/5 shadow-inner">
+                      <AvatarImage src={getMember(meeting.organizer_id)?.photo} />
+                      <AvatarFallback className="bg-gold/10 text-gold text-xs">{getMember(meeting.organizer_id)?.name?.charAt(0) || 'O'}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-[10px] text-muted-foreground mt-1">Organizer</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="w-4 h-4 text-primary" />
-                  {meeting.date_time ? new Date(meeting.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'}
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  {meeting.location}
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="w-4 h-4 text-primary" />
-                  {meeting.participants?.length || 0} registered
+
+                {/* Meeting Details */}
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <Calendar className="w-3.5 h-3.5 text-gold" />
+                      {meeting.date_time ? new Date(meeting.date_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'TBD'}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <Clock className="w-3.5 h-3.5 text-gold" />
+                      {meeting.date_time ? new Date(meeting.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <MapPin className="w-3.5 h-3.5 text-gold" />
+                      <span className="truncate" title={meeting.location}>{meeting.location || 'Online'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <Users className="w-3.5 h-3.5 text-gold" />
+                      {meeting.participants?.length || 0} Brigade Members
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 pt-4 border-t border-white/10">
+              <div className="mt-auto p-4 bg-white/[0.02] border-t border-white/5 flex gap-2">
                 {isRegistered(meeting) ? (
                   <Button
                     variant="outline"
-                    className="flex-1 border-green-500/50 text-green-400 cursor-default hover:bg-transparent hover:text-green-400"
+                    className="flex-1 bg-green-500/10 border-green-500/30 text-green-400 h-10 text-xs font-bold"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Registered
+                    REGISTERED
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => handleRegister(meeting._id)}
-                    variant="outline"
-                    className="flex-1"
+                    onClick={() => handleRegister(meeting._id || meeting.id)}
+                    className="flex-1 bg-gold hover:bg-gold/90 text-black h-10 text-xs font-bold transition-all"
                   >
-                    Register
+                    REGISTER NOW
                   </Button>
                 )}
 
-                {/* View Details could open a modal, but standard card is info enough for now */}
+                {meeting.meet_link && (
+                  <Button
+                    variant="outline"
+                    className="border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 text-gray-400 hover:text-blue-400 h-10 px-3 transition-all"
+                    asChild
+                  >
+                    <a href={meeting.meet_link} target="_blank" rel="noopener noreferrer">
+                      <Video className="w-4 h-4" />
+                    </a>
+                  </Button>
+                )}
               </div>
             </div>
           ))}

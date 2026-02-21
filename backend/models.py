@@ -68,6 +68,8 @@ class Meeting(db.Model):
     location = db.Column(db.String(200))
     description = db.Column(db.Text)
     type = db.Column(db.String(50), default='Chapter Meeting')
+    meeting_mode = db.Column(db.String(20), default='Offline') # Offline / Online
+    meet_link = db.Column(db.String(500))
     fee = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     organized_by = db.Column(db.Integer, db.ForeignKey('user.id')) # Organizer

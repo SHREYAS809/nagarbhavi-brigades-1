@@ -43,8 +43,9 @@ export const api = {
     },
 
     // Referrals
-    getReferrals: async (token: string): Promise<any> => {
-        const res = await fetch(`${API_URL}/referrals/`, {
+    getReferrals: async (token: string, params?: { search?: string, category?: string, filter?: string }): Promise<any> => {
+        const query = new URLSearchParams(params as any).toString();
+        const res = await fetch(`${API_URL}/referrals/${query ? '?' + query : ''}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return res.json();
@@ -98,11 +99,9 @@ export const api = {
         return res.json();
     },
 
-    getUsers: async (token: string): Promise<any> => {
-        // Use the new /api/users endpoint for admin management, 
-        // OR keep using /auth/users if it returns what we need. 
-        // The new endpoint /api/users returns simpler data without password.
-        const res = await fetch(`${API_URL}/users/`, {
+    getUsers: async (token: string, params?: { search?: string, category?: string }): Promise<any> => {
+        const query = new URLSearchParams(params as any).toString();
+        const res = await fetch(`${API_URL}/users/${query ? '?' + query : ''}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Failed to fetch users');
@@ -132,8 +131,9 @@ export const api = {
     },
 
     // Meetings
-    getMeetings: async (token: string): Promise<any> => {
-        const res = await fetch(`${API_URL}/meetings/`, {
+    getMeetings: async (token: string, params?: { search?: string, category?: string, filter?: string }): Promise<any> => {
+        const query = new URLSearchParams(params as any).toString();
+        const res = await fetch(`${API_URL}/meetings/${query ? '?' + query : ''}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Failed to fetch meetings');
@@ -177,8 +177,9 @@ export const api = {
     },
 
     // Revenue
-    getRevenue: async (token: string): Promise<any> => {
-        const res = await fetch(`${API_URL}/revenue/`, {
+    getRevenue: async (token: string, params?: { filter?: string, member_id?: string, category?: string, startDate?: string, endDate?: string }): Promise<any> => {
+        const query = new URLSearchParams(params as any).toString();
+        const res = await fetch(`${API_URL}/revenue/${query ? '?' + query : ''}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Failed to fetch revenue');

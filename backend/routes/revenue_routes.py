@@ -12,12 +12,33 @@ revenue_bp = Blueprint('revenue', __name__)
 @token_required
 def get_revenue(current_user):
     time_filter = request.args.get('filter')
+    member_id = request.args.get('member_id')
+    category = request.args.get('category')
+    start_date = request.args.get('startDate')
+    end_date = request.args.get('endDate')
+    
     query = Revenue.query
 
     if time_filter in ['6m', '12m']:
         months = 6 if time_filter == '6m' else 12
         cutoff_date = datetime.datetime.utcnow() - datetime.timedelta(days=months * 30)
         query = query.filter(Revenue.created_at >= cutoff_date)
+
+    if member_id:
+        query = query.filter(or_(Revenue.member_id == member_id, Revenue.created_by == member_id))
+    
+    if category:
+        # Join User to filter by category of either referrer or recipient
+        referrer_alias = db.aliased(User)
+        recipient_alias = db.aliased(User)
+        query = query.join(referrer_alias, Revenue.member_id == referrer_alias.id, isouter=True)
+        query = query.join(recipient_alias, Revenue.created_by == recipient_alias.id, isouter=True)
+        query = query.filter(or_(referrer_alias.business_category == category, recipient_alias.business_category == category))
+
+    if start_date:
+        query = query.filter(Revenue.date >= start_date)
+    if end_date:
+        query = query.filter(Revenue.date <= end_date)
 
     if current_user.role == 'admin':
         revenue = query.order_by(Revenue.created_at.desc()).all()

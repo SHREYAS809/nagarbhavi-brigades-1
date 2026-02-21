@@ -57,8 +57,9 @@ def create_app():
             # Add missing columns to 'referral' table
             db.session.execute(text("ALTER TABLE referral ADD COLUMN IF NOT EXISTS referral_type VARCHAR(20) DEFAULT 'Others'"))
             
-            # Add missing columns to 'meeting' table
             db.session.execute(text("ALTER TABLE meeting ADD COLUMN IF NOT EXISTS organized_by INTEGER REFERENCES \"user\"(id)"))
+            db.session.execute(text("ALTER TABLE meeting ADD COLUMN IF NOT EXISTS meeting_mode VARCHAR(20) DEFAULT 'Offline'"))
+            db.session.execute(text("ALTER TABLE meeting ADD COLUMN IF NOT EXISTS meet_link VARCHAR(500)"))
             
             # Create missing tables if they don't exist
             db.session.execute(text("""

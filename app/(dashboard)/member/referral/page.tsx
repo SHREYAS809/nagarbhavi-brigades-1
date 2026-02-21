@@ -6,6 +6,12 @@ import { api } from '@/lib/api';
 import { Gift } from 'lucide-react';
 import { RecordRevenueModal } from '@/components/dashboard/modals/record-revenue-modal';
 import { EditReferralModal } from '@/components/dashboard/modals/edit-referral-modal';
+import { FilterBar } from '@/components/dashboard/filter-bar';
+import { ReferralDetailsModal } from '@/components/dashboard/modals/referral-details-modal';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Eye, Search } from 'lucide-react';
 
 export default function MyReferralsPage() {
   const { user } = useAuth();
@@ -16,13 +22,15 @@ export default function MyReferralsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState<any>(null);
   const [selectedReferralId, setSelectedReferralId] = useState<string | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [filters, setFilters] = useState({ search: '', category: '' });
 
   useEffect(() => {
     async function fetchData() {
       if (user?.token) {
         try {
           const [refs, usrs] = await Promise.all([
-            api.getReferrals(user.token),
+            api.getReferrals(user.token, filters),
             api.getUsers(user.token)
           ]);
           setReferrals(refs);
@@ -35,7 +43,7 @@ export default function MyReferralsPage() {
       }
     }
     fetchData();
-  }, [user]);
+  }, [user, filters]);
 
   const fetchData = async () => {
     if (user?.token) {
@@ -44,8 +52,12 @@ export default function MyReferralsPage() {
     }
   };
 
+  const getMember = (id: string) => {
+    return members.find((u: any) => String(u.id) === String(id) || String(u._id) === String(id));
+  };
+
   const getMemberName = (id: string) => {
-    const m = members.find((u: any) => u._id === id);
+    const m = getMember(id);
     return m ? m.name : 'Unknown';
   };
 
@@ -68,11 +80,17 @@ export default function MyReferralsPage() {
       alert("Please select a referral slip to edit/delete.");
       return;
     }
-    const ref = referrals.find(r => r._id === selectedReferralId);
+    const ref = referrals.find(r => String(r.id) === String(selectedReferralId) || String(r._id) === String(selectedReferralId));
     if (ref) {
       setSelectedReferral(ref);
       setIsEditModalOpen(true);
     }
+  };
+
+  const handleViewDetails = (e: React.MouseEvent, referral: any) => {
+    e.stopPropagation();
+    setSelectedReferral(referral);
+    setIsDetailsModalOpen(true);
   };
 
   const handleEditSuccess = () => {
@@ -121,20 +139,8 @@ export default function MyReferralsPage() {
         </div>
       </div>
 
-      {/* Filters (Mock functionality for UI match) */}
-      <div className="glass-card p-4 flex flex-wrap gap-4 items-end print:hidden">
-        <div>
-          <label className="text-xs font-semibold text-muted-foreground block mb-1">Start Date</label>
-          <input type="date" className="bg-white/5 border border-white/10 rounded px-3 py-1 text-sm text-foreground focus:outline-none focus:border-primary/50" defaultValue="2026-01-19" />
-        </div>
-        <div>
-          <label className="text-xs font-semibold text-muted-foreground block mb-1">End Date</label>
-          <input type="date" className="bg-white/5 border border-white/10 rounded px-3 py-1 text-sm text-foreground focus:outline-none focus:border-primary/50" defaultValue="2026-02-18" />
-        </div>
-        <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 rounded text-sm font-semibold transition-colors">
-          Filter
-        </button>
-      </div>
+      {/* Filters */}
+      <FilterBar onFilterChange={setFilters} placeholder="Search referrals and contacts..." />
 
       {/* Report Container */}
       <div className="glass-card overflow-hidden border-white/10 print:shadow-none print:border-none print:bg-white print:text-black">
@@ -173,14 +179,9 @@ export default function MyReferralsPage() {
                 <th className="py-3 px-4 font-semibold whitespace-nowrap">Date</th>
                 <th className="py-3 px-4 font-semibold whitespace-nowrap">To</th>
                 <th className="py-3 px-4 font-semibold whitespace-nowrap">Referral</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">Inside/Outside</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Type</th>
                 <th className="py-3 px-4 font-semibold whitespace-nowrap">Status</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">Phone Number</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">Email</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">Comments</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">Referral Temp</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">Tracking Sheet Status</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">PALMS Status</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10 print:divide-gray-200 print:text-black">
@@ -189,30 +190,50 @@ export default function MyReferralsPage() {
                   const isSelected = selectedReferralId === ref._id;
                   return (
                     <tr
-                      key={ref._id}
-                      onClick={() => setSelectedReferralId(isSelected ? null : ref._id)}
+                      key={ref._id || ref.id}
+                      onClick={() => setSelectedReferralId(isSelected ? null : (ref._id || ref.id))}
                       className={`cursor-pointer transition-colors ${isSelected
                         ? 'bg-primary/10 border-l-2 border-primary print:bg-red-100'
                         : 'hover:bg-white/5 print:hover:bg-gray-50'
                         }`}
                     >
                       <td className="py-3 px-4 text-slate-300 print:text-black">{new Date(ref.created_at).toLocaleDateString()}</td>
-                      <td className="py-3 px-4 font-medium text-foreground print:text-black">{getMemberName(ref.to_member)}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-6 h-6 border border-white/10">
+                            <AvatarImage src={getMember(ref.to_member)?.photo} />
+                            <AvatarFallback className="text-[10px]">{getMemberName(ref.to_member).charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium text-foreground print:text-black">{getMemberName(ref.to_member)}</span>
+                        </div>
+                      </td>
                       <td className="py-3 px-4 text-slate-300 print:text-black">{ref.contact_name}</td>
-                      <td className="py-3 px-4 text-slate-300 print:text-black">{ref.referral_type} <span className="text-muted-foreground">(inside)</span></td>
-                      <td className="py-3 px-4 font-medium text-slate-300 print:text-black">Call Required</td>
-                      <td className="py-3 px-4 font-mono text-muted-foreground print:text-black">{ref.phone}</td>
-                      <td className="py-3 px-4 text-muted-foreground print:text-black">{ref.email}</td>
-                      <td className="py-3 px-4 max-w-[200px] truncate text-muted-foreground print:text-black" title={ref.comments}>{ref.comments}</td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`inline-block w-6 h-6 leading-6 rounded-full text-white font-bold text-[10px] ${ref.heat === 'Hot' ? 'bg-red-600' : ref.heat === 'Warm' ? 'bg-amber-500' : 'bg-blue-500'}`}>
-                          {ref.heat === 'Hot' ? 5 : ref.heat === 'Warm' ? 3 : 1}
+                      <td className="py-3 px-4">
+                        <Badge variant="outline" className="text-[10px] border-gold/30 text-gold/80">
+                          {ref.referral_type || 'Internal'}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-0.5 rounded text-white text-[10px] uppercase tracking-wider font-bold ${ref.status === 'Open' || ref.status === 'New' ? 'bg-blue-600/80' :
+                          ref.status === 'Contacted' ? 'bg-yellow-500/80' :
+                            ref.status === 'Got The Business' || ref.status === 'Closed' ? 'bg-green-600/80' :
+                              ref.status === 'Lost' ? 'bg-red-600/80' :
+                                'bg-slate-700'
+                          }`}>
+                          {ref.status || 'Open'}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground italic print:text-gray-500">
-                        {ref.status === 'New' ? 'Not Contacted Yet' : ref.status}
+                      <td className="py-3 px-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleViewDetails(e, ref)}
+                          className="w-8 h-8 text-gold hover:bg-gold/10"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </td>
-                      <td className="py-3 px-4 text-green-500 font-medium print:text-green-700">Completed</td>
                     </tr>
                   );
                 })
@@ -334,6 +355,13 @@ export default function MyReferralsPage() {
         onOpenChange={setIsEditModalOpen}
         referral={selectedReferral}
         onSuccess={handleEditSuccess}
+        members={members}
+      />
+
+      <ReferralDetailsModal
+        open={isDetailsModalOpen}
+        onOpenChange={setIsDetailsModalOpen}
+        referral={selectedReferral}
         members={members}
       />
     </div>

@@ -123,6 +123,24 @@ export const mockMembers: Member[] = [
   },
 ];
 
+export const categories = [
+  'IT Services',
+  'Real Estate',
+  'Finance & Insurance',
+  'Consulting',
+  'Manufacturing',
+  'Healthcare',
+  'Education',
+  'Retail & E-commerce',
+  'Hospitality',
+  'Legal Services',
+  'Marketing',
+  'Construction',
+  'Automobile',
+  'Agriculture',
+  'Others'
+];
+
 // Mock Referrals
 export const mockReferrals: Referral[] = [
   {

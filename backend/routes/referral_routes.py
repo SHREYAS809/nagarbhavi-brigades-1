@@ -12,12 +12,29 @@ referral_bp = Blueprint('referrals', __name__)
 @token_required
 def get_referrals(current_user):
     time_filter = request.args.get('filter')
+    search = request.args.get('search', '').strip()
+    category = request.args.get('category', '').strip()
     query = Referral.query
 
     if time_filter in ['6m', '12m']:
         months = 6 if time_filter == '6m' else 12
         cutoff_date = datetime.datetime.utcnow() - datetime.timedelta(days=months * 30)
         query = query.filter(Referral.created_at >= cutoff_date)
+
+    if search:
+        query = query.join(User, or_(Referral.from_member_id == User.id, Referral.to_member_id == User.id), isouter=True).filter(
+            or_(
+                Referral.contact_name.ilike(f'%{search}%'),
+                User.name.ilike(f'%{search}%')
+            )
+        )
+    
+    if category:
+        # Filter where either sender or receiver is in that category
+        # Using aliased joins would be cleaner but let's try a simpler approach assuming User is joined
+        query = query.join(User, or_(Referral.from_member_id == User.id, Referral.to_member_id == User.id), isouter=True).filter(
+            User.business_category == category
+        )
 
     if current_user.role == 'admin':
         referrals = query.order_by(Referral.created_at.desc()).all()

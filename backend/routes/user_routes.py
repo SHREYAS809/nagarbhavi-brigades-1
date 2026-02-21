@@ -8,7 +8,16 @@ user_bp = Blueprint('users', __name__)
 @user_bp.route('/', methods=['GET'])
 @token_required
 def get_users(current_user):
-    users = User.query.all()
+    search = request.args.get('search', '').strip()
+    category = request.args.get('category', '').strip()
+    
+    query = User.query
+    if search:
+        query = query.filter(User.name.ilike(f'%{search}%'))
+    if category:
+        query = query.filter(User.business_category == category)
+        
+    users = query.all()
     result = []
     for u in users:
         result.append({
