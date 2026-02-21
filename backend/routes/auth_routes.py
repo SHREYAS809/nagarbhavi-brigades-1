@@ -42,10 +42,12 @@ def login():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        if bcrypt.check_password_hash(user.password, data['password']):
+        is_match = bcrypt.check_password_hash(user.password, data['password'])
+        if is_match:
+            # Create a JWT token
             token = jwt.encode({
-                'user_id': str(user.id),
-                'role': user.role,
+                'user_id': str(user.id), # Keep as str(user.id) for consistency with existing code
+                'role': user.role, # Keep existing 'role' in token payload
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
             }, current_app.config['SECRET_KEY'], algorithm="HS256")
 
@@ -57,9 +59,9 @@ def login():
                 '_id': str(user.id) # Frontend compatibility
             }), 200
         else:
-            print(f"Login failed: Password mismatch for user {email}")
+            print(f"DEBUG LOGIN: Password mismatch for user '{email}'. Hash starts with: {user.password[:10]}...")
     else:
-        print(f"Login failed: User {email} not found")
+        print(f"DEBUG LOGIN: User '{email}' not found in database.")
 
     return jsonify({'message': 'Invalid credentials!'}), 401
 
