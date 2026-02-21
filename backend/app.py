@@ -46,11 +46,16 @@ def create_app():
             from sqlalchemy import text
             # Add missing columns to 'user' table
             db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS business_name VARCHAR(100)"))
+            db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS business_category VARCHAR(100)"))
             db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS services_offered TEXT"))
+            db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS photo TEXT"))
             
             # Add missing columns to 'revenue' table
             db.session.execute(text("ALTER TABLE revenue ADD COLUMN IF NOT EXISTS appreciation_message TEXT"))
             db.session.execute(text("ALTER TABLE revenue ADD COLUMN IF NOT EXISTS appreciation_reason TEXT"))
+            
+            # Add missing columns to 'referral' table
+            db.session.execute(text("ALTER TABLE referral ADD COLUMN IF NOT EXISTS referral_type VARCHAR(20) DEFAULT 'Others'"))
             
             # Add missing columns to 'meeting' table
             db.session.execute(text("ALTER TABLE meeting ADD COLUMN IF NOT EXISTS organized_by INTEGER REFERENCES \"user\"(id)"))
