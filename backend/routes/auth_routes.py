@@ -10,14 +10,15 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    if User.query.filter_by(email=data['email']).first():
+    email = data['email'].strip().lower()
+    if User.query.filter_by(email=email).first():
         return jsonify({'message': 'User already exists!'}), 409
 
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     
     new_user = User(
         name=data['name'],
-        email=data['email'],
+        email=email,
         password=hashed_password,
         role=data.get('role', 'member'),
         business_category=data.get('business_category'),
@@ -34,22 +35,28 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    user = User.query.filter_by(email=data['email']).first()
+    email = data['email'].strip().lower()
+    user = User.query.filter_by(email=email).first()
 
-    if user and bcrypt.check_password_hash(user.password, data['password']):
-        token = jwt.encode({
-            'user_id': str(user.id),
-            'role': user.role,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-        }, current_app.config['SECRET_KEY'], algorithm="HS256")
+    if user:
+        if bcrypt.check_password_hash(user.password, data['password']):
+            token = jwt.encode({
+                'user_id': str(user.id),
+                'role': user.role,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+            }, current_app.config['SECRET_KEY'], algorithm="HS256")
 
-        return jsonify({
-            'token': token,
-            'role': user.role,
-            'name': user.name,
-            'id': str(user.id),
-            '_id': str(user.id) # Frontend compatibility
-        }), 200
+            return jsonify({
+                'token': token,
+                'role': user.role,
+                'name': user.name,
+                'id': str(user.id),
+                '_id': str(user.id) # Frontend compatibility
+            }), 200
+        else:
+            print(f"Login failed: Password mismatch for user {data['email']}")
+    else:
+        print(f"Login failed: User {data['email']} not found")
 
     return jsonify({'message': 'Invalid credentials!'}), 401
 

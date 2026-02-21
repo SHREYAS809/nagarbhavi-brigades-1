@@ -34,9 +34,10 @@ export function LoginForm({ restrictedRole }: LoginFormProps) {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     try {
       // 1. Pre-check credentials and role WITHOUT setting global auth state yet
-      const preCheckUser = await api.login(email, password);
+      const preCheckUser = await api.login(normalizedEmail, password);
 
       // 2. Enforce Role Restriction
       // If role doesn't match, treat it as Invalid Credentials (security best practice)
@@ -53,7 +54,7 @@ export function LoginForm({ restrictedRole }: LoginFormProps) {
 
       // 3. If valid, NOW call the context login to set state and localStorage
       // (This effectively calls the API a second time, but ensures state consistency with the provider)
-      const user = await login(email, password);
+      const user = await login(normalizedEmail, password);
 
       if (user.role === 'admin') {
         router.push('/admin');
