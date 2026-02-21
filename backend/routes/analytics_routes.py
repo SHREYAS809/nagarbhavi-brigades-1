@@ -81,7 +81,6 @@ def get_analytics(current_user):
 
 @analytics_bp.route('/engagement', methods=['GET'])
 @token_required
-@admin_required
 def get_engagement_stats(current_user):
     # This would calculate engagement for ALL members
     users = User.query.filter_by(role='member').all()
@@ -121,7 +120,8 @@ def get_engagement_stats(current_user):
             status = 'Growing'
             
         result.append({
-            'id': u.id,
+            'id': str(u.id),
+            '_id': str(u.id), # Frontend compatibility
             'name': u.name,
             'status': status,
             'points': points,
