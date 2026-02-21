@@ -2,13 +2,23 @@ from flask import Blueprint, request, jsonify
 from backend.models import Meeting, User
 from backend.utils.extensions import db
 from backend.utils.auth import token_required, admin_required
+import datetime
 
 meeting_bp = Blueprint('meetings', __name__)
 
 @meeting_bp.route('/', methods=['GET'])
 @token_required
 def get_meetings(current_user):
-    meetings = Meeting.query.order_by(Meeting.date.desc()).all()
+    time_filter = request.args.get('filter')
+    query = Meeting.query
+
+    if time_filter in ['6m', '12m']:
+        months = 6 if time_filter == '6m' else 12
+        # Date is stored as string YYYY-MM-DD in Meeting model
+        cutoff_date = (datetime.datetime.utcnow() - datetime.timedelta(days=months * 30)).strftime('%Y-%m-%d')
+        query = query.filter(Meeting.date >= cutoff_date)
+
+    meetings = query.order_by(Meeting.date.desc()).all()
     result = []
     for m in meetings:
         participants = [{

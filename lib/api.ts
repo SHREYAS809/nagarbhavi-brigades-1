@@ -314,7 +314,8 @@ export const api = {
     },
 
     // Dashboard Data (Parallel fetching for efficiency)
-    getDashboardData: async (token: string): Promise<any> => {
+    getDashboardData: async (token: string, filter?: string): Promise<any> => {
+        const filterQuery = filter && filter !== 'lifetime' ? `?filter=${filter}` : '';
         const handleResponse = async (res: Response) => {
             if (!res.ok) {
                 const text = await res.text();
@@ -337,9 +338,9 @@ export const api = {
                 });
 
         const [referrals, revenue, meetings, members] = await Promise.all([
-            safeFetch(`${API_URL}/referrals/`),
-            safeFetch(`${API_URL}/revenue/`),
-            safeFetch(`${API_URL}/meetings/`),
+            safeFetch(`${API_URL}/referrals/${filterQuery}`),
+            safeFetch(`${API_URL}/revenue/${filterQuery}`),
+            safeFetch(`${API_URL}/meetings/${filterQuery}`),
             safeFetch(`${API_URL}/auth/users`),
         ]);
 

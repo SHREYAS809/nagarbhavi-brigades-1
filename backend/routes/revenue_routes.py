@@ -11,13 +11,19 @@ revenue_bp = Blueprint('revenue', __name__)
 @revenue_bp.route('/', methods=['GET'])
 @token_required
 def get_revenue(current_user):
-    # Fetch revenue where user is beneficiary (Earned) OR user is creator (Given)
-    # Admin sees all?
+    time_filter = request.args.get('filter')
+    query = Revenue.query
+
+    if time_filter in ['6m', '12m']:
+        months = 6 if time_filter == '6m' else 12
+        cutoff_date = datetime.datetime.utcnow() - datetime.timedelta(days=months * 30)
+        query = query.filter(Revenue.created_at >= cutoff_date)
+
     if current_user.role == 'admin':
-        revenue = Revenue.query.order_by(Revenue.created_at.desc()).all()
+        revenue = query.order_by(Revenue.created_at.desc()).all()
     else:
         # Use SQLAlchemy OR
-        revenue = Revenue.query.filter(
+        revenue = query.filter(
             or_(
                 Revenue.member_id == current_user.id,
                 Revenue.created_by == current_user.id

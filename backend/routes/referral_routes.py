@@ -3,21 +3,29 @@ from backend.models import Referral, User
 from backend.utils.extensions import db
 from backend.utils.auth import token_required
 from backend.utils.email_service import send_email
+from sqlalchemy import or_
+import datetime
 
 referral_bp = Blueprint('referrals', __name__)
 
 @referral_bp.route('/', methods=['GET'])
 @token_required
 def get_referrals(current_user):
-    # Admin sees all, members see sent/received
+    time_filter = request.args.get('filter')
+    query = Referral.query
+
+    if time_filter in ['6m', '12m']:
+        months = 6 if time_filter == '6m' else 12
+        cutoff_date = datetime.datetime.utcnow() - datetime.timedelta(days=months * 30)
+        query = query.filter(Referral.created_at >= cutoff_date)
+
     if current_user.role == 'admin':
-        referrals = Referral.query.order_by(Referral.created_at.desc()).all()
+        referrals = query.order_by(Referral.created_at.desc()).all()
     else:
         # Fetch logic: Either from_member or to_member is current user
-        # SQLAlchemy OR condition is complex, simpler to query all for now or 2 queries
-        # referrals = Referral.query.filter((Referral.from_member_id == current_user.id) | (Referral.to_member_id == current_user.id)).all()
-        # Let's return all for "visibility" for now, or fetch all and filter in python if lazy
-        referrals = Referral.query.order_by(Referral.created_at.desc()).all()
+        referrals = query.filter(
+            or_(Referral.from_member_id == current_user.id, Referral.to_member_id == current_user.id)
+        ).order_by(Referral.created_at.desc()).all()
 
     result = []
     for r in referrals:

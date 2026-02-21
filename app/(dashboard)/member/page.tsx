@@ -19,13 +19,15 @@ export default function MemberDashboard() {
   const [data, setData] = useState<any>(null);
   const [engagement, setEngagement] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState<'6m' | '12m' | 'lifetime'>('12m');
 
   useEffect(() => {
     async function fetchData() {
       if (user?.token) {
+        setLoading(true);
         try {
           const [dashboardData, engagementData] = await Promise.all([
-            api.getDashboardData(user.token),
+            api.getDashboardData(user.token, timeFilter),
             api.getEngagementStats(user.token)
           ]);
           setData(dashboardData);
@@ -39,12 +41,10 @@ export default function MemberDashboard() {
         } finally {
           setLoading(false);
         }
-      } else if (!user) {
-        // wait for auth
       }
     }
     fetchData();
-  }, [user]);
+  }, [user, timeFilter]);
 
   if (loading) return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading dashboard...</div>;
   if (!data) return <div className="p-8 text-center text-red-400">Failed to load data.</div>;
@@ -94,6 +94,33 @@ export default function MemberDashboard() {
             <span className="font-bold">04/01/2027</span>
           </div>
 
+          <div className="flex bg-black/40 border border-white/10 p-1 rounded-md">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setTimeFilter('6m')}
+              className={`text-xs px-3 h-8 ${timeFilter === '6m' ? 'bg-primary text-black hover:bg-primary/90' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              6 Months
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setTimeFilter('12m')}
+              className={`text-xs px-3 h-8 ${timeFilter === '12m' ? 'bg-primary text-black hover:bg-primary/90' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              12 Months
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setTimeFilter('lifetime')}
+              className={`text-xs px-3 h-8 ${timeFilter === 'lifetime' ? 'bg-primary text-black hover:bg-primary/90' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Lifetime
+            </Button>
+          </div>
+
           <Button variant="outline" className="border-red-600/50 text-red-500 hover:bg-red-600/10 hover:text-red-400">
             Regional Website
           </Button>
@@ -120,7 +147,11 @@ export default function MemberDashboard() {
         {/* Left Column: Chart (Span 5) */}
         <div className="xl:col-span-5 flex flex-col gap-6">
           <div className="h-[400px] xl:h-[500px]">
-            <ReferralActivityChart referrals={referrals} currentUserId={currentUserId} />
+            <ReferralActivityChart
+              referrals={referrals}
+              currentUserId={currentUserId}
+              timeRange={timeFilter === '6m' ? '6M' : timeFilter === '12m' ? '12M' : 'Lifetime'}
+            />
           </div>
         </div>
 

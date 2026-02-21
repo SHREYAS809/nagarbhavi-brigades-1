@@ -18,11 +18,10 @@ import { useState, useMemo } from 'react';
 interface ReferralActivityChartProps {
     referrals: any[];
     currentUserId: string;
+    timeRange: '6M' | '12M' | 'Lifetime';
 }
 
-export function ReferralActivityChart({ referrals, currentUserId }: ReferralActivityChartProps) {
-    const [timeRange, setTimeRange] = useState<'6M' | '12M' | 'Lifetime'>('12M');
-
+export function ReferralActivityChart({ referrals, currentUserId, timeRange }: ReferralActivityChartProps) {
     const chartData = useMemo(() => {
         const given = referrals.filter((r: any) => r.from_member === currentUserId);
         const months = [];
@@ -30,7 +29,7 @@ export function ReferralActivityChart({ referrals, currentUserId }: ReferralActi
 
         let rangeMonths = 12;
         if (timeRange === '6M') rangeMonths = 6;
-        if (timeRange === 'Lifetime') rangeMonths = 24; // Or dynamic based on first referral
+        if (timeRange === 'Lifetime') rangeMonths = 24; // Better to make it 24 for "lifetime" in few points
 
         for (let i = rangeMonths - 1; i >= 0; i--) {
             const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
@@ -112,30 +111,6 @@ export function ReferralActivityChart({ referrals, currentUserId }: ReferralActi
                 </ResponsiveContainer>
             </CardContent>
             <div className="p-4 border-t border-white/10 flex justify-end gap-2 bg-black/20">
-                <Button
-                    variant={timeRange === '6M' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    onClick={() => setTimeRange('6M')}
-                    className={`text-xs ${timeRange === '6M' ? 'bg-primary/20 text-primary hover:bg-primary/30 border border-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-                >
-                    Last 6 Months
-                </Button>
-                <Button
-                    variant={timeRange === '12M' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    onClick={() => setTimeRange('12M')}
-                    className={`text-xs ${timeRange === '12M' ? 'bg-primary/20 text-primary hover:bg-primary/30 border border-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-                >
-                    Last 12 Months
-                </Button>
-                <Button
-                    variant={timeRange === 'Lifetime' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    onClick={() => setTimeRange('Lifetime')}
-                    className={`text-xs ${timeRange === 'Lifetime' ? 'bg-primary/20 text-primary hover:bg-primary/30 border border-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-                >
-                    Lifetime
-                </Button>
                 <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 text-muted-foreground">
                     <Info className="h-4 w-4" />
                 </Button>
