@@ -153,10 +153,10 @@ export function CreateMeetingModal({
                                 <SelectTrigger className="glass-input">
                                     <SelectValue placeholder="Select mode" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-900 border-white/10">
-                                    <SelectItem value="In-Person">In-Person</SelectItem>
-                                    <SelectItem value="Online">Online</SelectItem>
-                                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                                <SelectContent className="bg-slate-900 border-white/20 text-white shadow-2xl">
+                                    <SelectItem value="In-Person" className="focus:bg-primary focus:text-primary-foreground cursor-pointer transition-colors font-medium">In-Person</SelectItem>
+                                    <SelectItem value="Online" className="focus:bg-primary focus:text-primary-foreground cursor-pointer transition-colors font-medium">Online</SelectItem>
+                                    <SelectItem value="Hybrid" className="focus:bg-primary focus:text-primary-foreground cursor-pointer transition-colors font-medium">Hybrid</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

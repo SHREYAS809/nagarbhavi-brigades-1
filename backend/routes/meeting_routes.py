@@ -46,6 +46,7 @@ def get_meetings(current_user):
             'meeting_mode': m.meeting_mode,
             'meet_link': m.meet_link,
             'fee': m.fee,
+            'organizer_id': str(m.organized_by) if m.organized_by else None,
             'attendee_count': m.attendees.count(),
             'participants': participants # Added list of participants
         })

@@ -110,12 +110,17 @@ export default function MeetingsPage() {
                     <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{meeting.description || 'No description provided.'}</p>
                   </div>
 
-                  <div className="flex flex-col items-center">
-                    <Avatar className="w-12 h-12 border-2 border-white/5 shadow-inner">
-                      <AvatarImage src={getMember(meeting.organizer_id)?.photo} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">{getMember(meeting.organizer_id)?.name?.charAt(0) || 'O'}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-[10px] text-muted-foreground mt-1">Organizer</span>
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-3">
+                      <div className="text-right hidden sm:block">
+                        <p className="text-xs font-bold text-white leading-none mb-1">{getMember(meeting.organizer_id)?.name || 'Organizer'}</p>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Organized by</span>
+                      </div>
+                      <Avatar className="w-12 h-12 border-2 border-primary/20 shadow-inner group-hover:border-primary/50 transition-colors">
+                        <AvatarImage src={getMember(meeting.organizer_id)?.photo} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{getMember(meeting.organizer_id)?.name?.charAt(0) || 'O'}</AvatarFallback>
+                      </Avatar>
+                    </div>
                   </div>
                 </div>
 
