@@ -106,18 +106,6 @@ def create_app():
             db.session.rollback()
             print(f"Raw SQL fallback failed: {e2}")
             
-        # NORMALIZE EMAILS: Ensure all existing emails are lowercase for consistency
-        try:
-            from backend.models import User
-            users = User.query.all()
-            for u in users:
-                if u.email and u.email != u.email.lower():
-                    u.email = u.email.lower()
-            db.session.commit()
-            print("Successfully normalized all emails to lowercase.")
-        except Exception as e3:
-            db.session.rollback()
-            print(f"Email normalization failed: {e3}")
     
     CORS(app) # Enable CORS for all routes
 

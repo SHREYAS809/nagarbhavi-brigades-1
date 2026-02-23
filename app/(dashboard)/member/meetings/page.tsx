@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Clock, Users, CheckCircle, Video, Globe, Home, ExternalLink } from 'lucide-react';
+import { Plus, Calendar, MapPin, Clock, Users, CheckCircle, Video, Globe, Home, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FilterBar } from '@/components/dashboard/filter-bar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { CreateMeetingModal } from '@/components/dashboard/modals/create-meeting-modal';
 
 export default function MeetingsPage() {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export default function MeetingsPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ search: '', category: '' });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchData = async () => {
     if (user?.token) {
@@ -73,6 +75,13 @@ export default function MeetingsPage() {
             Networking events, workshops, and weekly brigade meetings.
           </p>
         </div>
+        <Button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-gold hover:bg-gold/90 text-black font-bold h-11 px-6 shadow-lg shadow-gold/20"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Schedule Meeting
+        </Button>
       </div>
 
       <FilterBar onFilterChange={setFilters} placeholder="Filter meetings..." />
@@ -88,8 +97,8 @@ export default function MeetingsPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant="outline" className={`text-[10px] uppercase font-bold px-2 py-0.5 ${meeting.meeting_mode === 'Online' ? 'border-blue-500/50 text-blue-400 bg-blue-500/5' :
-                          meeting.meeting_mode === 'Hybrid' ? 'border-purple-500/50 text-purple-400 bg-purple-500/5' :
-                            'border-orange-500/50 text-orange-400 bg-orange-500/5'
+                        meeting.meeting_mode === 'Hybrid' ? 'border-purple-500/50 text-purple-400 bg-purple-500/5' :
+                          'border-orange-500/50 text-orange-400 bg-orange-500/5'
                         }`}>
                         {meeting.meeting_mode || 'In-Person'}
                       </Badge>
@@ -175,6 +184,12 @@ export default function MeetingsPage() {
           <p className="text-muted-foreground mb-4">No upcoming meetings</p>
         </div>
       )}
+
+      <CreateMeetingModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onSuccess={fetchData}
+      />
     </div>
   );
 }

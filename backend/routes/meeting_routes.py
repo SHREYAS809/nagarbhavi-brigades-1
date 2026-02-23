@@ -53,7 +53,6 @@ def get_meetings(current_user):
 
 @meeting_bp.route('/', methods=['POST'])
 @token_required
-@admin_required
 def create_meeting(current_user):
     try:
         data = request.get_json()
@@ -102,7 +101,6 @@ def create_meeting(current_user):
 
 @meeting_bp.route('/<id>', methods=['PUT'])
 @token_required
-@admin_required
 def update_meeting(current_user, id):
     data = request.get_json()
     meeting = Meeting.query.get(id)
