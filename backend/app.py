@@ -83,6 +83,16 @@ def create_app():
             """))
             
             db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS event (
+                    id SERIAL PRIMARY KEY,
+                    title VARCHAR(100) NOT NULL,
+                    date VARCHAR(20) NOT NULL,
+                    description TEXT,
+                    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            
+            db.session.execute(text("""
                 CREATE TABLE IF NOT EXISTS event_attendees (
                     user_id INTEGER NOT NULL REFERENCES \"user\"(id),
                     event_id INTEGER NOT NULL REFERENCES event(id),
