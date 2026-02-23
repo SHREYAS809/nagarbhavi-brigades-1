@@ -77,7 +77,7 @@ export default function MeetingsPage() {
         </div>
         <Button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-gold hover:bg-gold/90 text-black font-bold h-11 px-6 shadow-lg shadow-gold/20"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 px-6 shadow-lg shadow-primary/20"
         >
           <Plus className="w-5 h-5 mr-2" />
           Schedule Meeting
@@ -157,7 +157,7 @@ export default function MeetingsPage() {
                 ) : (
                   <Button
                     onClick={() => handleRegister(meeting._id || meeting.id)}
-                    className="flex-1 bg-gold hover:bg-gold/90 text-black h-10 text-xs font-bold transition-all"
+                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground h-10 text-xs font-bold transition-all"
                   >
                     REGISTER NOW
                   </Button>
