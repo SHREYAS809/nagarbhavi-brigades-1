@@ -9,6 +9,8 @@ import { Calendar, MapPin, Users, Plus, Edit2, Trash2, Eye } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast';
 
 import { ViewParticipantsModal } from '@/components/dashboard/modals/view-participants-modal';
+import { Badge } from '@/components/ui/badge';
+import { Video } from 'lucide-react';
 
 export default function AdminMeetingsPage() {
   const { user } = useAuth();
@@ -98,6 +100,25 @@ export default function AdminMeetingsPage() {
                   <h3 className="text-lg font-bold text-foreground mb-2">{meeting.title}</h3>
                   <p className="text-sm text-muted-foreground mb-4">{meeting.description}</p>
 
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="outline" className={`text-[10px] uppercase font-bold px-2 py-0.5 ${meeting.meeting_mode === 'Online' ? 'border-blue-500/50 text-blue-400 bg-blue-500/5' :
+                      meeting.meeting_mode === 'Hybrid' ? 'border-purple-500/50 text-purple-400 bg-purple-500/5' :
+                        'border-orange-500/50 text-orange-400 bg-orange-500/5'
+                      }`}>
+                      {meeting.meeting_mode || 'In-Person'}
+                    </Badge>
+                    {meeting.meeting_mode !== 'In-Person' && meeting.meet_link && (
+                      <a
+                        href={meeting.meet_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors ml-2"
+                      >
+                        <Video className="w-3 h-3" />
+                        Join Meet
+                      </a>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Calendar className="w-4 h-4 text-primary" />

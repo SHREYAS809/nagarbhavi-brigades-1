@@ -12,7 +12,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Calendar, AlertCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { TrendingUp, Calendar, AlertCircle, ArrowUpRight, ArrowDownLeft, Video } from 'lucide-react';
+import { MemberDetailsModal } from '@/components/dashboard/modals/member-details-modal';
 import { FilterBar } from '@/components/dashboard/filter-bar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,8 @@ export default function RevenuePage() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ search: '', category: '' });
   const [view, setView] = useState<'received' | 'given'>('received');
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -73,7 +76,15 @@ export default function RevenuePage() {
     setChartData(chart);
   };
 
-  const getMember = (id: string) => members.find(m => String(m.id) === String(id) || String(m._id) === String(id));
+  const getMember = (id: string) => members.find(m => String(m.id || m._id) === String(id));
+
+  const handleMemberClick = (id: string) => {
+    const member = getMember(id);
+    if (member) {
+      setSelectedMember(member);
+      setIsMemberModalOpen(true);
+    }
+  };
 
   const receivedRevenue = revenue.filter((r: any) => String(r.member_id) === String(user?.id));
   const givenRevenue = revenue.filter((r: any) => String(r.created_by) === String(user?.id));
@@ -211,7 +222,10 @@ export default function RevenuePage() {
                           {getMember(view === 'received' ? item.created_by : item.member_id)?.name?.charAt(0) || '?'}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-semibold text-white group-hover:text-gold transition-colors">
+                      <span 
+                        className="font-semibold text-white group-hover:text-gold cursor-pointer transition-colors"
+                        onClick={() => handleMemberClick(view === 'received' ? item.created_by : item.member_id)}
+                      >
                         {getMember(view === 'received' ? item.created_by : item.member_id)?.name || 'Unknown'}
                       </span>
                     </div>
@@ -251,5 +265,11 @@ export default function RevenuePage() {
         </div>
       </div>
     </div>
+      <MemberDetailsModal
+        open={isMemberModalOpen}
+        onOpenChange={setIsMemberModalOpen}
+        member={selectedMember}
+      />
+    </div >
   );
 }

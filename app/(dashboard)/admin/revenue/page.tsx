@@ -16,7 +16,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Plus } from 'lucide-react';
+import { TrendingUp, Plus, Calendar as CalendarIcon, User, Tag } from 'lucide-react';
+import { FilterBar } from '@/components/dashboard/filter-bar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MemberDetailsModal } from '@/components/dashboard/modals/member-details-modal';
 
 export default function AdminRevenuePage() {
   const { user } = useAuth();
@@ -26,6 +29,9 @@ export default function AdminRevenuePage() {
   const [memberRevenueData, setMemberRevenueData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [filters, setFilters] = useState({ search: '', category: '' });
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (user?.token) {
@@ -48,6 +54,34 @@ export default function AdminRevenuePage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const getMember = (id: string) => {
+    return members.find((u: any) => u._id === id || u.id === id);
+  };
+
+  const handleMemberClick = (id: string) => {
+    const member = getMember(id);
+    if (member) {
+      setSelectedMember(member);
+      setIsMemberModalOpen(true);
+    }
+  };
+
+  const filteredRevenue = revenue.filter(item => {
+    const member = getMember(item.member_id);
+    const matchesSearch =
+      member?.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      item.notes?.toLowerCase().includes(filters.search.toLowerCase());
+    const matchesCategory = !filters.category || member?.business_category === filters.category;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Re-process chart data when filteredRevenue or members change
+  useEffect(() => {
+    if (members.length > 0) {
+      processChartData(filteredRevenue, members);
+    }
+  }, [filteredRevenue, members]);
 
   const processChartData = (data: any[], userList: any[]) => {
     // 1. Revenue Trend (Group by Month)
@@ -77,7 +111,7 @@ export default function AdminRevenuePage() {
   };
 
 
-  const totalRevenue = revenue.reduce((sum, item) => sum + item.amount, 0);
+  const totalRevenue = filteredRevenue.reduce((sum, item) => sum + item.amount, 0);
   const thisYearRevenue = totalRevenue; // Simplified
   const thisMonthRevenue = chartData.length > 0 ? chartData[chartData.length - 1].amount : 0;
   const avgMonthlyRevenue = chartData.length > 0 ? Math.round(totalRevenue / chartData.length) : 0;
@@ -89,8 +123,6 @@ export default function AdminRevenuePage() {
 
   return (
     <div className="p-6 md:p-8 space-y-8">
-      {/* Page Header */}
-      {/* Page Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Revenue Analytics</h1>
@@ -106,6 +138,8 @@ export default function AdminRevenuePage() {
           Add Revenue
         </Button>
       </div>
+
+      <FilterBar onFilterChange={setFilters} placeholder="Filter by member or notes..." />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -218,8 +252,17 @@ export default function AdminRevenuePage() {
                 <div className="flex items-center justify-center w-8 h-8 bg-primary/20 rounded-full font-bold text-sm text-primary">
                   #{index + 1}
                 </div>
+                <Avatar className="w-10 h-10 border border-white/10">
+                  <AvatarImage src={members.find(m => m.name === member.member)?.photo} />
+                  <AvatarFallback className="bg-gray-800">{member.member.charAt(0)}</AvatarFallback>
+                </Avatar>
                 <div>
-                  <p className="font-semibold text-foreground">{member.member}</p>
+                  <p
+                    className="font-semibold text-foreground cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => handleMemberClick(members.find(m => m.name === member.member)?.id || members.find(m => m.name === member.member)?._id)}
+                  >
+                    {member.member}
+                  </p>
                   <p className="text-xs text-muted-foreground">Revenue generated</p>
                 </div>
               </div>
@@ -237,6 +280,12 @@ export default function AdminRevenuePage() {
         onOpenChange={setIsAddModalOpen}
         onSuccess={fetchData}
       />
-    </div>
+
+      <MemberDetailsModal
+        open={isMemberModalOpen}
+        onOpenChange={setIsMemberModalOpen}
+        member={selectedMember}
+      />
+    </div >
   );
 }

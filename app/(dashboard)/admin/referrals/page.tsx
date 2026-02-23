@@ -6,6 +6,9 @@ import { useAuth } from '@/lib/authContext';
 import { Button } from '@/components/ui/button';
 import { Gift, Trash2, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { FilterBar } from '@/components/dashboard/filter-bar';
+import { ReferralDetailsModal } from '@/components/dashboard/modals/referral-details-modal';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function AdminReferralsPage() {
   const { user } = useAuth();
@@ -13,7 +16,9 @@ export default function AdminReferralsPage() {
   const [referrals, setReferrals] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [filters, setFilters] = useState({ search: '', category: '' });
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedReferral, setSelectedReferral] = useState<any>(null);
 
   const fetchData = async () => {
     if (user?.token) {
@@ -58,14 +63,35 @@ export default function AdminReferralsPage() {
     }
   };
 
+  const getMember = (id: string) => {
+    return members.find((u: any) => u._id === id || u.id === id);
+  };
+
   const getMemberName = (id: string) => {
-    const m = members.find((u: any) => u._id === id);
+    const m = getMember(id);
     return m ? m.name : 'Unknown';
   };
 
-  const filteredReferrals = typeFilter
-    ? referrals.filter(r => r.referral_type === typeFilter)
-    : referrals;
+  const handleViewDetails = (referral: any) => {
+    setSelectedReferral(referral);
+    setIsDetailsModalOpen(true);
+  };
+
+  const filteredReferrals = referrals.filter(r => {
+    const fromMember = getMember(r.from_member);
+    const toMember = getMember(r.to_member);
+
+    const matchesSearch =
+      r.contact_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      fromMember?.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      toMember?.name?.toLowerCase().includes(filters.search.toLowerCase());
+
+    const matchesCategory = !filters.category ||
+      fromMember?.business_category === filters.category ||
+      toMember?.business_category === filters.category;
+
+    return matchesSearch && matchesCategory;
+  });
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading referrals...</div>;
 
@@ -80,28 +106,10 @@ export default function AdminReferralsPage() {
       </div>
 
       {/* Filters */}
-      <div className="glass-card p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <label className="text-sm text-muted-foreground mb-2 block">Filter by Type</label>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="glass-input w-full [&>option]:text-black"
-            >
-              <option value="">All Types</option>
-              <option value="Tier 1">Tier 1</option>
-              <option value="Tier 2">Tier 2</option>
-              <option value="Tier 3">Tier 3</option>
-            </select>
-          </div>
-          <div className="flex items-end">
-            <p className="text-sm text-muted-foreground">
-              {filteredReferrals.length} referral{filteredReferrals.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-        </div>
-      </div>
+      <FilterBar
+        onFilterChange={setFilters}
+        placeholder="Search by contact, member..."
+      />
 
       {/* Referrals Table */}
       <div className="glass-card overflow-hidden">
@@ -113,19 +121,35 @@ export default function AdminReferralsPage() {
                   <th className="text-left py-4 px-6 text-muted-foreground font-semibold">Date</th>
                   <th className="text-left py-4 px-6 text-muted-foreground font-semibold">From</th>
                   <th className="text-left py-4 px-6 text-muted-foreground font-semibold">To</th>
-                  <th className="text-left py-4 px-6 text-muted-foreground font-semibold">Name</th>
+                  <th className="text-left py-4 px-6 text-muted-foreground font-semibold">Contact</th>
                   <th className="text-left py-4 px-6 text-muted-foreground font-semibold">Type</th>
                   <th className="text-left py-4 px-6 text-muted-foreground font-semibold">Heat</th>
                   <th className="text-left py-4 px-6 text-muted-foreground font-semibold">Status</th>
-                  <th className="text-left py-4 px-6 text-muted-foreground font-semibold">Actions</th>
+                  <th className="text-right py-4 px-6 text-muted-foreground font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredReferrals.map((ref) => (
                   <tr key={ref._id} className="border-b border-white/5 hover:bg-white/5 transition">
                     <td className="py-4 px-6 text-muted-foreground text-xs">{new Date(ref.created_at).toLocaleDateString()}</td>
-                    <td className="py-4 px-6 font-medium">{getMemberName(ref.from_member)}</td>
-                    <td className="py-4 px-6 font-medium">{getMemberName(ref.to_member)}</td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6 border border-white/10">
+                          <AvatarImage src={getMember(ref.from_member)?.photo} />
+                          <AvatarFallback className="text-[10px]">{getMemberName(ref.from_member).charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => handleViewDetails(ref)}>{getMemberName(ref.from_member)}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6 border border-white/10">
+                          <AvatarImage src={getMember(ref.to_member)?.photo} />
+                          <AvatarFallback className="text-[10px]">{getMemberName(ref.to_member).charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => handleViewDetails(ref)}>{getMemberName(ref.to_member)}</span>
+                      </div>
+                    </td>
                     <td className="py-4 px-6 font-semibold">{ref.contact_name}</td>
                     <td className="py-4 px-6">
                       <span className="px-2 py-1 bg-primary/20 text-primary text-xs rounded font-semibold">
@@ -148,8 +172,15 @@ export default function AdminReferralsPage() {
                         {ref.status}
                       </span>
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="flex gap-2">
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleViewDetails(ref)}
+                          className="p-1 hover:bg-white/10 rounded transition"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4 text-gold hover:text-gold/80" />
+                        </button>
                         {/* Approve Button */}
                         {ref.status === 'Open' && (
                           <>
@@ -201,6 +232,13 @@ export default function AdminReferralsPage() {
           </div>
         )}
       </div>
+
+      <ReferralDetailsModal
+        open={isDetailsModalOpen}
+        onOpenChange={setIsDetailsModalOpen}
+        referral={selectedReferral}
+        members={members}
+      />
     </div>
   );
 }

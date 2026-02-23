@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { api } from '@/lib/api';
-import { Gift } from 'lucide-react';
+import { Eye, Gift } from 'lucide-react';
 import { RecordRevenueModal } from '@/components/dashboard/modals/record-revenue-modal';
 import { EditReferralModal } from '@/components/dashboard/modals/edit-referral-modal';
 import { FilterBar } from '@/components/dashboard/filter-bar';
@@ -11,7 +11,6 @@ import { ReferralDetailsModal } from '@/components/dashboard/modals/referral-det
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Search } from 'lucide-react';
 
 export default function MyReferralsPage() {
   const { user } = useAuth();
@@ -177,11 +176,11 @@ export default function MyReferralsPage() {
             <thead>
               <tr className="border-b border-white/10 bg-white/5 text-muted-foreground print:bg-gray-100 print:text-black print:border-gray-300">
                 <th className="py-3 px-4 font-semibold whitespace-nowrap">Date</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">To</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap">Referral</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Recipient</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Contact</th>
                 <th className="py-3 px-4 font-semibold whitespace-nowrap">Type</th>
                 <th className="py-3 px-4 font-semibold whitespace-nowrap">Status</th>
-                <th className="py-3 px-4 font-semibold whitespace-nowrap text-right">Action</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10 print:divide-gray-200 print:text-black">

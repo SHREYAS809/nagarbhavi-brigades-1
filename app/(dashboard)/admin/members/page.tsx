@@ -10,7 +10,9 @@ import { Users, Edit2, Trash2, Plus, Search } from 'lucide-react';
 
 import { EditMemberModal } from '@/components/dashboard/modals/edit-member-modal';
 import { AddMemberModal } from '@/components/dashboard/modals/add-member-modal';
+import { MemberDetailsModal } from '@/components/dashboard/modals/member-details-modal';
 import { EngagementBadge } from '@/components/dashboard/engagement-badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function AdminMembersPage() {
   const { user } = useAuth();
@@ -24,7 +26,9 @@ export default function AdminMembersPage() {
   // Modal States
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
 
   useEffect(() => {
     fetchMembers();
@@ -66,6 +70,11 @@ export default function AdminMembersPage() {
   const handleEdit = (member: any) => {
     setEditingMember(member);
     setIsEditModalOpen(true);
+  };
+
+  const handleViewDetails = (member: any) => {
+    setSelectedMember(member);
+    setIsDetailModalOpen(true);
   };
 
   const categories = Array.from(new Set(members.map(m => m.business_category).filter(Boolean)));
@@ -139,9 +148,15 @@ export default function AdminMembersPage() {
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-                    <Users className="w-6 h-6 text-primary-foreground" />
-                  </div>
+                  <Avatar
+                    className="w-12 h-12 border-2 border-primary/20 cursor-pointer hover:border-primary/50 transition-all"
+                    onClick={() => handleViewDetails(member)}
+                  >
+                    <AvatarImage src={member.photo} />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground">
+                      {member.name?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
                   {engagement.find(e => e.id === member._id || e.id === member.id) && (
                     <EngagementBadge
                       status={engagement.find(e => e.id === member._id || e.id === member.id).status}
@@ -167,7 +182,12 @@ export default function AdminMembersPage() {
 
               {/* Info */}
               <div className="space-y-1">
-                <p className="font-semibold text-foreground">{member.name}</p>
+                <p
+                  className="font-semibold text-foreground cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => handleViewDetails(member)}
+                >
+                  {member.name}
+                </p>
                 <p className="text-xs text-primary font-medium">{member.business_category || 'Uncategorized'}</p>
               </div>
 
@@ -178,8 +198,11 @@ export default function AdminMembersPage() {
               </div>
 
               {/* Action Button */}
-              <Button className="w-full bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 text-sm">
-                View Profile
+              <Button
+                onClick={() => handleViewDetails(member)}
+                className="w-full bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 text-sm"
+              >
+                View Details
               </Button>
             </div>
           ))}
@@ -202,6 +225,12 @@ export default function AdminMembersPage() {
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
         onSuccess={fetchMembers}
+      />
+
+      <MemberDetailsModal
+        open={isDetailModalOpen}
+        onOpenChange={setIsDetailModalOpen}
+        member={selectedMember}
       />
     </div>
   );

@@ -8,7 +8,18 @@ import { FilterBar } from '@/components/dashboard/filter-bar';
 import { ReferralDetailsModal } from '@/components/dashboard/modals/referral-details-modal';
 import { ThankYouRecordModal } from '@/components/dashboard/modals/thank-you-record-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Eye, Heart } from 'lucide-react';
+import { Eye, Heart, MessageSquare } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function ReferralsReceivedPage() {
     const { user } = useAuth();
@@ -19,6 +30,8 @@ export default function ReferralsReceivedPage() {
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isThankYouModalOpen, setIsThankYouModalOpen] = useState(false);
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [thankYouMessage, setThankYouMessage] = useState('');
     const [filters, setFilters] = useState({ search: '', category: '' });
 
     useEffect(() => {
@@ -74,6 +87,14 @@ export default function ReferralsReceivedPage() {
 
     const handleSayThankYou = (referral: any) => {
         setSelectedReferral(referral);
+        const fromMemberName = getMemberName(referral.from_member);
+        const message = `Dear ${fromMemberName},\n\nThank you for the referral of ${referral.contact_name}. I truly appreciate your support and trust.\n\nBest regards,\n${user?.name}`;
+        setThankYouMessage(message);
+        setIsPreviewModalOpen(true);
+    };
+
+    const handleConfirmThankYou = () => {
+        setIsPreviewModalOpen(false);
         setIsThankYouModalOpen(true);
     };
 
@@ -155,7 +176,7 @@ export default function ReferralsReceivedPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    onClick={() => handleSayThank You(ref)}
+                                                    onClick={() => handleSayThankYou(ref)}
                                                     className="w-8 h-8 text-primary hover:bg-primary/10"
                                                     title="Say Thank You"
                                                 >
@@ -194,20 +215,45 @@ export default function ReferralsReceivedPage() {
                 }}
             />
 
-            <ReferralDetailsModal 
+            <ReferralDetailsModal
                 open={isDetailsModalOpen}
                 onOpenChange={setIsDetailsModalOpen}
                 referral={selectedReferral}
                 members={members}
             />
 
-            <ThankYouRecordModal 
+            <ThankYouRecordModal
                 open={isThankYouModalOpen}
                 onOpenChange={setIsThankYouModalOpen}
                 referral={selectedReferral}
                 sender={getMember(selectedReferral?.from_member)}
                 receiver={user}
             />
+
+            {/* Thank You Message Preview Modal */}
+            <Dialog open={isPreviewModalOpen} onOpenChange={setIsPreviewModalOpen}>
+                <DialogContent className="max-w-md glass-card border-white/20">
+                    <DialogHeader>
+                        <DialogTitle className="gold-text">Say Thank You</DialogTitle>
+                        <DialogDescription>
+                            Preview your thank you message for {selectedReferral && getMemberName(selectedReferral.from_member)}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Textarea
+                            value={thankYouMessage}
+                            onChange={(e) => setThankYouMessage(e.target.value)}
+                            className="glass-input min-h-[150px] text-sm"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsPreviewModalOpen(false)}>Cancel</Button>
+                        <Button onClick={handleConfirmThankYou} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                            Proceed to Record
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div >
     );
 }

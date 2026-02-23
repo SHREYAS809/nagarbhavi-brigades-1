@@ -14,7 +14,14 @@ import {
 } from '@/components/ui/dialog';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/authContext';
-import { Calendar, Clock, MapPin, AlignLeft, Plus } from 'lucide-react';
+import { Calendar, Clock, MapPin, AlignLeft, Plus, Type, FileText, Video, Globe } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface CreateMeetingModalProps {
     open: boolean;
@@ -35,6 +42,8 @@ export function CreateMeetingModal({
         time: '',
         location: '',
         description: '',
+        meeting_mode: 'In-Person',
+        meet_link: '',
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +63,9 @@ export function CreateMeetingModal({
                 notes: formData.description,
                 organizer_id: user?.id,
                 type: 'Chapter Meeting', // Default type
-                fee: 0
+                fee: 0,
+                meeting_mode: formData.meeting_mode,
+                meet_link: formData.meet_link,
             };
 
             const res = await api.createMeeting(user?.token || '', payload);
@@ -74,6 +85,8 @@ export function CreateMeetingModal({
                 time: '',
                 location: '',
                 description: '',
+                meeting_mode: 'In-Person',
+                meet_link: '',
             });
 
         } catch (error) {
@@ -128,7 +141,26 @@ export function CreateMeetingModal({
                     </div>
 
                     {/* Date & Time */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="meeting_mode" className="text-sm font-medium">
+                                Meeting Mode
+                            </Label>
+                            <Select
+                                value={formData.meeting_mode}
+                                onValueChange={(value) => setFormData(prev => ({ ...prev, meeting_mode: value }))}
+                            >
+                                <SelectTrigger className="glass-input">
+                                    <SelectValue placeholder="Select mode" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-900 border-white/10">
+                                    <SelectItem value="In-Person">In-Person</SelectItem>
+                                    <SelectItem value="Online">Online</SelectItem>
+                                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
                         <div className="space-y-2">
                             <Label htmlFor="date" className="text-sm font-medium">
                                 Date
@@ -141,12 +173,14 @@ export function CreateMeetingModal({
                                     type="date"
                                     value={formData.date}
                                     onChange={handleChange}
-                                    className="glass-input pl-10"
+                                    className="glass-input pl-10 [color-scheme:dark]"
                                     required
                                 />
                             </div>
                         </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="time" className="text-sm font-medium">
                                 Time
@@ -159,31 +193,50 @@ export function CreateMeetingModal({
                                     type="time"
                                     value={formData.time}
                                     onChange={handleChange}
-                                    className="glass-input pl-10"
+                                    className="glass-input pl-10 [color-scheme:dark]"
                                     required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="location" className="text-sm font-medium">
+                                {formData.meeting_mode === 'Online' ? 'Meeting Platform' : 'Location / Venue'}
+                            </Label>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                    id="location"
+                                    name="location"
+                                    placeholder={formData.meeting_mode === 'Online' ? 'Google Meet, Zoom, etc.' : "Venue address"}
+                                    value={formData.location}
+                                    onChange={handleChange}
+                                    className="glass-input pl-10"
+                                    required={formData.meeting_mode !== 'Online'}
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Location */}
-                    <div className="space-y-2">
-                        <Label htmlFor="location" className="text-sm font-medium">
-                            Location
-                        </Label>
-                        <div className="relative">
-                            <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                            <Input
-                                id="location"
-                                name="location"
-                                placeholder="Venue address or link"
-                                value={formData.location}
-                                onChange={handleChange}
-                                className="glass-input pl-10"
-                                required
-                            />
+                    {formData.meeting_mode !== 'In-Person' && (
+                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                            <Label htmlFor="meet_link" className="text-sm font-medium text-gold">
+                                Google Meet / Video Link
+                            </Label>
+                            <div className="relative">
+                                <Video className="absolute left-3 top-3 w-4 h-4 text-gold" />
+                                <Input
+                                    id="meet_link"
+                                    name="meet_link"
+                                    placeholder="https://meet.google.com/..."
+                                    value={formData.meet_link}
+                                    onChange={handleChange}
+                                    className="glass-input pl-10 border-gold/30 focus:border-gold"
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Description */}
                     <div className="space-y-2">
