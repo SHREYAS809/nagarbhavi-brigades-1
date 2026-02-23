@@ -165,10 +165,7 @@ export default function MyReferralsPage() {
           </div>
         </div>
 
-        {/* Warning Banner */}
-        <div className="bg-amber-500/10 text-amber-500 text-[10px] md:text-xs p-3 text-center border-b border-amber-500/20 font-medium print:bg-amber-50 print:text-amber-800 print:border-amber-200">
-          Slips associated with PALMS reports that have not been submitted can be edited. If the slip you want to edit has a status of completed, please contact your Vice President to have him/her unlock the report for you.
-        </div>
+        {/* Table */}
 
         {/* Table */}
         <div className="overflow-x-auto">
