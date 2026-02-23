@@ -222,7 +222,7 @@ export default function RevenuePage() {
                           {getMember(view === 'received' ? item.created_by : item.member_id)?.name?.charAt(0) || '?'}
                         </AvatarFallback>
                       </Avatar>
-                      <span 
+                      <span
                         className="font-semibold text-white group-hover:text-gold cursor-pointer transition-colors"
                         onClick={() => handleMemberClick(view === 'received' ? item.created_by : item.member_id)}
                       >
@@ -264,12 +264,11 @@ export default function RevenuePage() {
           </p>
         </div>
       </div>
-    </div>
       <MemberDetailsModal
         open={isMemberModalOpen}
         onOpenChange={setIsMemberModalOpen}
         member={selectedMember}
       />
-    </div >
+    </div>
   );
 }

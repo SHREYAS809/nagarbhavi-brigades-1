@@ -254,6 +254,6 @@ export default function ReferralsReceivedPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     );
 }

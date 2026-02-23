@@ -286,6 +286,6 @@ export default function AdminRevenuePage() {
         onOpenChange={setIsMemberModalOpen}
         member={selectedMember}
       />
-    </div >
+    </div>
   );
 }
