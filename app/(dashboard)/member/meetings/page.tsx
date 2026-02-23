@@ -113,7 +113,7 @@ export default function MeetingsPage() {
                   <div className="flex flex-col items-center">
                     <Avatar className="w-12 h-12 border-2 border-white/5 shadow-inner">
                       <AvatarImage src={getMember(meeting.organizer_id)?.photo} />
-                      <AvatarFallback className="bg-gold/10 text-gold text-xs">{getMember(meeting.organizer_id)?.name?.charAt(0) || 'O'}</AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">{getMember(meeting.organizer_id)?.name?.charAt(0) || 'O'}</AvatarFallback>
                     </Avatar>
                     <span className="text-[10px] text-muted-foreground mt-1">Organizer</span>
                   </div>

@@ -168,7 +168,7 @@ export default function ReferralsReceivedPage() {
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => handleViewDetails(ref)}
-                                                    className="w-8 h-8 text-gold hover:bg-gold/10"
+                                                    className="w-8 h-8 text-primary hover:bg-primary/10"
                                                     title="View Details"
                                                 >
                                                     <Eye className="w-4 h-4" />

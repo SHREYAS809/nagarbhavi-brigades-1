@@ -96,7 +96,7 @@ export default function MemberBroadcastPage() {
                                 <div className="relative group">
                                     <Avatar className={`w-12 h-12 border-2 ${!item.read_status ? 'border-gold' : 'border-white/10'}`}>
                                         <AvatarImage src={getSender(item.created_by)?.photo} />
-                                        <AvatarFallback className="bg-gold/10 text-gold">AD</AvatarFallback>
+                                        <AvatarFallback className="bg-primary/10 text-primary">AD</AvatarFallback>
                                     </Avatar>
                                     {!item.read_status && (
                                         <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-black" />
@@ -109,7 +109,7 @@ export default function MemberBroadcastPage() {
                                                 {item.subject || 'Announcement'}
                                             </h3>
                                             {!item.read_status && (
-                                                <Badge variant="outline" className="text-[8px] bg-gold/10 text-gold border-gold/30 h-4">NEW</Badge>
+                                                <Badge variant="outline" className="text-[8px] bg-primary/10 text-primary border-primary/30 h-4">NEW</Badge>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
