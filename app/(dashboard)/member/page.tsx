@@ -238,7 +238,7 @@ export default function MemberDashboard() {
               value={meetingsCount}
               icon={Coffee} // Changed from Users
               actions={[
-                { label: 'Log Meeting', variant: 'destructive', className: 'bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:text-red-400', href: '/member/meetings' },
+                { label: 'Schedule Meeting', variant: 'destructive', className: 'bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:text-red-400', href: '/member/meetings' },
                 { label: 'Review', variant: 'ghost', href: '/member/meetings' }
               ]}
             />

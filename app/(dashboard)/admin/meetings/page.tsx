@@ -83,7 +83,7 @@ export default function AdminMeetingsPage() {
         </div>
         <Button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground hidden md:flex gap-2"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground flex gap-2 shadow-lg"
         >
           <Plus className="w-4 h-4" />
           Create Meeting
