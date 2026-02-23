@@ -113,8 +113,8 @@ export default function RevenuePage() {
         </div>
         <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-[300px]">
           <TabsList className="grid w-full grid-cols-2 bg-white/5 border border-white/10">
-            <TabsTrigger value="received" className="data-[state=active]:bg-gold data-[state=active]:text-black">Received</TabsTrigger>
-            <TabsTrigger value="given" className="data-[state=active]:bg-gold data-[state=active]:text-black">Given</TabsTrigger>
+            <TabsTrigger value="received" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Received</TabsTrigger>
+            <TabsTrigger value="given" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Given</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -123,8 +123,8 @@ export default function RevenuePage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-card-hover p-6 border-gold/20 bg-gold/5">
-          <p className="text-sm text-gold mb-2 flex items-center gap-2">
+        <div className="glass-card-hover p-6 border-primary/20 bg-primary/5">
+          <p className="text-sm text-primary mb-2 flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             Total Received
           </p>

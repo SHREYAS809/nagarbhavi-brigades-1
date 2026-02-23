@@ -93,24 +93,24 @@ export default function SubmitReferralPage() {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <h3 className="text-lg font-bold text-white group-hover:text-gold transition-colors">{member.name}</h3>
-                                    <p className="text-sm text-gold/80 font-medium">{member.business_category || 'Business Owner'}</p>
+                                    <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors">{member.name}</h3>
+                                    <p className="text-sm text-primary/80 font-medium">{member.business_category || 'Business Owner'}</p>
                                 </div>
 
                                 <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        <MapPin className="w-3 h-3 text-gold/50" />
+                                        <MapPin className="w-3 h-3 text-primary/50" />
                                         <span>Bangalore Hub</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        <Star className="w-3 h-3 text-gold/50" />
+                                        <Star className="w-3 h-3 text-primary/50" />
                                         <span>Active Member</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="mt-auto p-4 bg-white/[0.02] border-t border-white/5">
-                                <Button className="w-full bg-gold/10 hover:bg-gold text-gold hover:text-black font-bold uppercase tracking-wider text-xs border border-gold/20 transition-all duration-300">
+                                <Button className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-black font-bold uppercase tracking-wider text-xs border border-primary/20 transition-all duration-300">
                                     Give Referral
                                 </Button>
                             </div>
